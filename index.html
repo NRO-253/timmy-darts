@@ -1,0 +1,1784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1311">
+<title>Timmy Darts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Pub scoreboard: dark slate surround, chalk-white figures, dartboard red / green / sisal as the only colours.
+   Tablet: scoreboard left, dart pad right. Phone and portrait: stacked. */
+:root{
+  --bg:#0f1311;
+  --panel:#171d1a;
+  --panel-2:#202824;
+  --line:#2e3833;
+  --fg:#ecebe2;
+  --muted:#9aa59e;
+  --red:#e2483d;
+  --red-soft:#3a1f1c;
+  --green:#3daf6b;
+  --green-soft:#17301f;
+  --sisal:#dccb9f;
+  --sisal-ink:#1d1a11;
+  --amber:#e9b04c;
+  --b-dark:#1a1f1c;
+  --b-light:#e3d8b8;
+  --b-red:#cf3b30;
+  --b-green:#2e8f56;
+  --b-wire:#7d877f;
+  --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --body:'Barlow','Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;border:0;background:none}
+button:disabled{cursor:not-allowed;opacity:.38}
+:focus-visible{outline:2px solid var(--sisal);outline-offset:2px}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:800;letter-spacing:.01em;text-wrap:balance}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600}
+
+.app{min-height:100%;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;
+  display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.brand svg .m1{fill:var(--panel-2);stroke:var(--line)} .brand svg .m2{fill:var(--green)} .brand svg .m3{fill:var(--sisal)} .brand svg .m4{fill:var(--red)}
+.nav{display:flex;gap:4px;background:var(--panel);padding:4px;border-radius:10px}
+.nav button{padding:8px 16px;border-radius:7px;font-weight:600;color:var(--muted)}
+.nav button[aria-current="page"]{background:var(--panel-2);color:var(--fg)}
+.sync{margin-left:auto;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync.ok::before{background:var(--green)} .sync.warn::before{background:var(--amber)}
+
+main{flex:1;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 32px;width:100%;max-width:1280px;margin:0 auto;box-sizing:border-box}
+.panel{background:var(--panel);border-radius:14px;padding:18px;display:grid;gap:14px;min-width:0}
+.banner{background:var(--red-soft);border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.note{color:var(--muted);font-size:14px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:10px;font-weight:700;background:var(--panel-2);border:1px solid var(--line)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{background:transparent}
+.btn.big{min-height:60px;font-size:19px;width:100%}
+.btn.small{min-height:36px;padding:0 12px;font-size:14px}
+
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+@media (max-width:860px){.lobby{grid-template-columns:1fr}}
+.side{display:grid;gap:16px;min-width:0}
+.timmy-card{background:var(--sisal);color:var(--sisal-ink);border-radius:14px;padding:20px 22px;display:grid;gap:4px}
+.timmy-card .eyebrow{color:#5d553f}
+.tc-num{font-family:var(--display);font-weight:900;font-size:clamp(88px,14vw,132px);line-height:.9;font-variant-numeric:tabular-nums}
+.tc-unit{font-weight:600;font-size:17px}
+.tc-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 6px;padding-top:12px;border-top:1px solid #b9a97f}
+.tc-facts dt{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#5d553f;font-weight:600}
+.tc-facts dd{margin:0;font-family:var(--display);font-weight:800;font-size:26px;font-variant-numeric:tabular-nums}
+.tc-why{font-size:14px;color:#4a4433}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:48px;padding:0 16px;border-radius:24px;background:var(--panel-2);border:1px solid var(--line);font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.chip.on{background:var(--green-soft);border-color:var(--green)}
+.chip .ord{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--green);color:#08140c;font-size:13px;font-weight:800}
+.add{display:flex;gap:8px}
+.add input{flex:1;min-width:0;min-height:48px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+.lineup{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:ln}
+.lineup li{display:flex;align-items:center;gap:10px;background:var(--panel-2);border-radius:10px;padding:6px 6px 6px 12px;counter-increment:ln}
+.lineup li::before{content:counter(ln);font-family:var(--display);font-weight:800;font-size:22px;width:22px;color:var(--muted)}
+.lineup li span{flex:1;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.iconbtn{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;font-size:18px;color:var(--muted)}
+.iconbtn:hover{background:var(--panel)}
+.resume{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.games{list-style:none;margin:0;padding:0;display:grid}
+.games li{display:flex;gap:12px;align-items:baseline;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.games li:first-child{border-top:0}
+.games .who{min-width:0;overflow-wrap:anywhere}
+.tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.tag.win{background:var(--green-soft);color:var(--green)}
+.tag.loss{background:var(--red-soft);color:#ff8f86}
+
+/* game */
+.game{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px;align-items:start}
+@media (max-width:860px){.game{grid-template-columns:1fr}}
+.board{display:grid;gap:10px;min-width:0}
+.roundbar{display:grid;gap:10px;background:var(--panel);border-radius:14px;padding:14px 16px}
+.rb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rb-head h2{font-size:30px}
+.phase{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:6px;background:var(--sisal);color:var(--sisal-ink)}
+.rb-head .end{margin-left:auto}
+.track{display:flex;flex-wrap:wrap;gap:4px}
+.cell{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:16px;background:var(--panel-2);color:var(--muted);border:1px solid transparent;position:relative}
+.cell.free{border-color:var(--green)}
+.cell.done{opacity:.45}
+.cell.now{background:var(--red);color:#fff;opacity:1;border-color:var(--red)}
+.cell .mk{position:absolute;top:-7px;right:-5px;font-size:10px;font-family:var(--body);font-weight:800;background:var(--sisal);color:var(--sisal-ink);border-radius:4px;padding:0 3px;line-height:14px}
+.legend{font-size:13px;color:var(--muted)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 16px;border-radius:12px;background:var(--panel);border:2px solid transparent}
+.row.now{border-color:var(--red);background:var(--panel-2)}
+.row.sit .rem,.row.out .rem{color:var(--muted)}
+.row .name{font-weight:700;font-size:19px;overflow-wrap:anywhere}
+.row .sub{grid-column:1/-1;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.row .rem{font-family:var(--display);font-weight:800;font-size:46px;line-height:1;font-variant-numeric:tabular-nums;grid-row:1/3;grid-column:2;text-align:right}
+.row .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.row.timmy .darts{color:var(--sisal-ink)}
+.row.timmy .st{background:#c9b88a;color:var(--sisal-ink)}
+.st{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--panel-2);color:var(--muted)}
+.st.throw{background:var(--red);color:#fff}
+.st.sit{background:#3a3220;color:var(--amber)}
+.st.ok{background:var(--green-soft);color:var(--green)}
+.warn{color:var(--amber)}
+.good{color:var(--green)}
+.darts{font-family:var(--display);font-weight:700;font-size:17px;color:var(--fg);letter-spacing:.02em}
+.row.timmy{background:var(--sisal);color:var(--sisal-ink)}
+.row.timmy .sub{color:#5d553f}
+.row.timmy .rem{color:var(--sisal-ink)}
+.log{background:var(--panel);border-radius:12px;padding:6px 16px}
+.log button.toggle{width:100%;text-align:left;padding:10px 0;font-weight:600;color:var(--muted)}
+.log ol{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px;font-size:14px}
+.log li{display:grid;gap:2px;border-top:1px solid var(--line);padding-top:8px}
+.log li b{font-family:var(--display);font-size:17px}
+.confirmbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--red-soft);border:1px solid var(--red);border-radius:10px;padding:10px 12px}
+.confirmbar p{flex:1 1 200px}
+
+.pad{background:var(--panel);border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.pad-who{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.pad-who h2{font-size:38px;line-height:1;overflow-wrap:anywhere}
+.live{text-align:right}
+.live b{display:block;font-family:var(--display);font-weight:900;font-size:56px;line-height:.9;font-variant-numeric:tabular-nums}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(64px,auto);gap:8px}
+.slot{height:58px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-size:30px;font-weight:800}
+.slot.filled{border-style:solid;background:var(--panel-2)}
+.slot.sum{border:0;background:transparent;font-size:34px;color:var(--muted)}
+.slots.bust .slot.filled{border-color:var(--red);color:#ff8f86}
+.slots.out .slot.filled{border-color:var(--green);color:var(--green)}
+.slots.c26 .slot.filled{border-color:var(--sisal)}
+.slots.rolled .slot.filled{background:var(--sisal);color:var(--sisal-ink);border-color:var(--sisal)}
+.sisal{color:var(--sisal)}
+.btn.roll{background:transparent;border:2px dashed var(--sisal);color:var(--sisal)}
+.hint{min-height:44px;font-size:15px;display:flex;flex-direction:column;justify-content:center}
+.hint strong{font-size:17px}
+.mods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mods button{min-height:52px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);font-weight:700;font-size:17px}
+.mods button[aria-pressed="true"].S{background:var(--sisal);color:var(--sisal-ink);border-color:var(--sisal)}
+.mods button[aria-pressed="true"].D{background:var(--red);color:#fff;border-color:var(--red)}
+.mods button[aria-pressed="true"].T{background:var(--green);color:#06130b;border-color:var(--green)}
+.keys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.key{min-height:60px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);font-family:var(--display);font-weight:800;font-size:28px;font-variant-numeric:tabular-nums}
+.key small{font-size:16px;margin-right:1px;color:var(--muted)}
+.key:active:not(:disabled),.mods button:active,.btn:active:not(:disabled){transform:translateY(1px)}
+.keys.D .key{border-color:#6e2c27}
+.keys.T .key{border-color:#245a39}
+.extra{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.key.skipbtn{font-family:var(--body);font-size:18px;font-weight:700}
+.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+@media (max-width:420px){.key{min-height:54px;font-size:24px}.pad-who h2{font-size:30px}.live b{font-size:46px}}
+
+/* result */
+.result{max-width:620px;margin:20px auto;display:grid;gap:16px}
+.result .hero{border-radius:16px;padding:28px 24px;display:grid;gap:8px}
+.result .hero.win{background:var(--green-soft);border:2px solid var(--green)}
+.result .hero.loss{background:var(--sisal);color:var(--sisal-ink)}
+.result h1{font-size:clamp(44px,9vw,72px);line-height:.95}
+.result .btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+
+/* stats */
+.stats{display:grid;gap:16px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.summary div{background:var(--panel);border-radius:12px;padding:14px 16px}
+.summary b{display:block;font-family:var(--display);font-weight:800;font-size:38px;line-height:1.05;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;background:var(--panel);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15px}
+th,td{padding:11px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+td:first-child{font-weight:700}
+tr:last-child td{border-bottom:0}
+
+/* rules */
+.rules{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:start}
+@media (max-width:860px){.rules{grid-template-columns:1fr}}
+.rulelist{margin:0;padding:0;list-style:none;display:grid;gap:14px;max-width:68ch}
+.rulelist li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 14px;align-items:start}
+.rulelist li h3,.rulelist li p{grid-column:2}
+.rulelist li .switch{grid-column:3;grid-row:1/3}
+.rulelist li.off h3,.rulelist li.off p{opacity:.5}
+.rules-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets .btn[aria-pressed="true"]{border-color:var(--green);background:var(--green-soft)}
+.switch{flex:none;width:56px;height:32px;border-radius:16px;background:var(--bg);border:1px solid var(--line);position:relative;transition:background .15s}
+.switch span{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.switch[aria-checked="true"]{background:var(--green);border-color:var(--green)}
+.switch[aria-checked="true"] span{transform:translateX(24px);background:#fff}
+.rulesum{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;background:var(--panel-2);border-radius:10px;padding:10px 12px}
+.rulesum > div{flex:1 1 220px;min-width:0}
+.phase.freaky{background:var(--red);color:#fff}
+.rulelist h3{font-size:21px}
+.rulelist .k{grid-column:1;grid-row:1/3;font-family:var(--display);font-weight:900;font-size:22px;color:var(--sisal);min-width:28px}
+.rulelist p{color:#cfd3cb}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.setting:first-of-type{border-top:0}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper b{font-family:var(--display);font-weight:800;font-size:28px;min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:10px}
+.seg button{padding:8px 14px;border-radius:7px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg)}
+.plist{list-style:none;margin:0;padding:0;display:grid}
+.plist li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.plist li:first-child{border-top:0}
+.plist .arch{color:var(--muted)}
+
+.loading{display:grid;place-items:center;min-height:50vh;text-align:center;gap:10px;color:var(--muted)}
+.filterbar{gap:10px}
+.fb-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
+.seg.wrap{flex-wrap:wrap;width:fit-content;max-width:100%}
+.dates{display:flex;gap:12px;flex-wrap:wrap}
+.dates label{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--muted)}
+.dates input{min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+.pp-head{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.pp-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.pp-body{grid-template-columns:1fr}}
+.board-wrap{margin:0;display:grid;gap:10px;justify-items:center;min-width:0}
+.board-wrap figcaption{display:grid;gap:6px;justify-items:center}
+.board{width:100%;max-width:440px;height:auto;display:block}
+.board .rim{fill:var(--bg)}
+.board .hm{stroke:var(--panel);stroke-width:.9;cursor:pointer}
+.board .selo{fill:none;stroke:var(--sisal);stroke-width:2.4;pointer-events:none}
+.board .nums text{fill:var(--muted);font-family:var(--display);font-weight:700;font-size:12px;text-anchor:middle;dominant-baseline:central}
+.heat-legend{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:center;font-size:13px;font-variant-numeric:tabular-nums}
+.hl-item{display:inline-flex;align-items:center;gap:5px}
+.hl-item i{width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
+.hm-info{text-align:center;font-size:15px;min-height:22px}
+.pp-side{display:grid;gap:14px;min-width:0}
+.mix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.mix div{background:var(--panel-2);border-radius:10px;padding:10px 12px}
+.mix dt{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.mix dd{margin:0;font-family:var(--display);font-weight:800;font-size:26px;font-variant-numeric:tabular-nums}
+.toplist{margin-top:6px}
+.toplist td{padding:7px 10px;text-align:right}
+.toplist td:first-child{text-align:left;position:static;background:none}
+.tip{color:var(--sisal)}
+.ranking{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.ranking .span2{grid-column:1/-1}
+@media (max-width:860px){.ranking{grid-template-columns:1fr}}
+.monthnav{display:flex;gap:4px}
+.champ{background:var(--sisal);color:var(--sisal-ink);border-radius:12px;padding:14px 18px;display:grid;gap:2px}
+.champ .eyebrow{color:#5d553f}
+.champ b{font-family:var(--display);font-weight:900;font-size:40px;line-height:1}
+.tablewrap.flat{background:transparent;border-radius:0}
+.tablewrap.flat th:first-child,.tablewrap.flat td:first-child{position:static;background:none;text-align:right;width:2ch;color:var(--muted)}
+.tablewrap.flat td:nth-child(2),.tablewrap.flat th:nth-child(2){text-align:left;font-weight:700}
+tr.timmyrow td{color:var(--sisal)}
+td.good{color:var(--green)} td.warn{color:var(--amber)}
+.badgegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.badge{display:grid;gap:4px;padding:12px 14px;border-radius:12px;border:1px dashed var(--line);color:var(--muted)}
+.badge b{font-family:var(--display);font-size:21px;font-weight:800}
+.badge .holders{font-size:14px}
+.badge.got{border:1px solid var(--green);background:var(--green-soft);color:var(--fg)}
+.badge.got .holders{color:var(--green);font-weight:600}
+.badge.shame.got{border-color:var(--amber);background:#2e2718}
+.badge.shame.got .holders{color:var(--amber)}
+.badges-inline{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.bchip{font-size:13px;font-weight:700;padding:4px 10px;border-radius:14px;background:var(--green-soft);color:var(--green)}
+.bchip.shame{background:#2e2718;color:var(--amber)}
+.achlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.achlist li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:8px 12px;border-radius:10px;background:var(--green-soft)}
+.achlist li.shame{background:#2e2718}
+.achlist .note{flex-basis:100%}
+.newb{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:var(--sisal);color:var(--sisal-ink);padding:2px 6px;border-radius:5px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+label.btn.disabled{opacity:.38;pointer-events:none}
+.hcv{font-family:var(--display);font-size:26px;font-weight:800}
+.padboard{display:grid;justify-items:center}
+.padboard svg{width:min(100%, calc(100vh - 390px));min-width:min(100%,280px);height:auto;display:block;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.padboard .surround{fill:var(--b-dark)}
+.padboard .f{stroke:var(--b-wire);stroke-width:.6;cursor:pointer;transition:filter .08s}
+.padboard .f.dk{fill:var(--b-dark)} .padboard .f.lt{fill:var(--b-light)}
+.padboard .f.rd{fill:var(--b-red)} .padboard .f.gn{fill:var(--b-green)}
+.padboard .f:hover{filter:brightness(1.3)}
+.padboard .f:active{filter:brightness(1.7)}
+.padboard .hit{fill:none;stroke:var(--sisal);stroke-width:3;pointer-events:none}
+.padboard .nums text{fill:var(--fg);font-family:var(--display);font-weight:800;font-size:13px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.padboard.locked{opacity:.35;pointer-events:none}
+.pad.compact{gap:10px;padding:14px}
+.pad.compact .pad-who h2{font-size:30px}
+.pad.compact .live b{font-size:44px}
+.pad.compact .slot{height:46px;font-size:26px}
+.pad.compact .hint{min-height:40px;font-size:14px}
+.pad.compact .hint strong{font-size:16px}
+.actions.row4{grid-template-columns:1fr 1fr 1fr 1.6fr}
+.actions.row4 .btn{padding:0 10px}
+@media (max-width:420px){.actions.row4{grid-template-columns:1fr 1fr 1fr}.actions.row4 .primary{grid-column:1/-1}}
+.st.tok{background:var(--sisal);color:var(--sisal-ink)}
+.row.timmy .st.tok{background:var(--sisal-ink);color:var(--sisal)}
+.btn.trade{background:transparent;border:2px solid var(--sisal);color:var(--sisal)}
+.btn.trade[aria-pressed="true"]{background:var(--sisal);color:var(--sisal-ink)}
+.bank{background:var(--panel);border-radius:12px;padding:12px 16px;display:grid;gap:8px}
+.bank h3{font-size:20px}
+.bank ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.bank li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;justify-content:space-between}
+.bank .who{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.bank .acts{display:flex;flex-wrap:wrap;gap:6px}
+.bank .give-to{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;max-width:min(520px,calc(100% - 32px));z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="15" class="m1"/><circle cx="16" cy="16" r="11" class="m2"/><circle cx="16" cy="16" r="7" class="m3"/><circle cx="16" cy="16" r="3" class="m4"/></svg>
+      Timmy
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <button data-act="nav" data-v="play" aria-current="page">Play</button>
+      <button data-act="nav" data-v="stats">Stats</button>
+      <button data-act="nav" data-v="ranking">Ranking</button>
+      <button data-act="nav" data-v="rules">Rules</button>
+    </nav>
+    <span id="sync" class="sync">Connecting…</span>
+  </header>
+  <main id="view"><div class="loading"><p>Loading your games…</p></div></main>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ENGINE START */
+function dv(c){ if(!c || c==='M') return 0; const n=+c.slice(1); return n*({S:1,D:2,T:3}[c[0]]||0); }
+function dartText(c){ if(c==='M') return '0'; if(c==='D25') return 'Bull'; if(c==='S25') return '25'; if(c[0]==='S') return c.slice(1); return c; }
+const dsum=d=>(d||[]).reduce((a,c)=>a+dv(c),0);
+
+// House rules a game is played with. New games copy the switches from the Rules tab;
+// games saved before the switches existed play with LEGACY_RULES.
+const DEFAULT_RULES={timmy:true, freaky:false, madness:false, trade26:true, give26:true, vault26:true, sitOut:true, free12:true, stell:true, lastFree:true, c26:true, sub26:true, roll:true, skip:true};
+const LEGACY_RULES=Object.assign({}, DEFAULT_RULES, {sub26:false, trade26:false, give26:false, vault26:false});
+const rulesOf=g=>Object.assign({}, LEGACY_RULES, (g&&g.rules)||{});
+
+// One turn, from `rem`, with the darts thrown so far. R.sub26 switches on 26 by subtraction.
+function evalTurn(rem, darts, R){
+  R=R||{};
+  let r=rem, score=0, bust=false, out=false, att=0, used=0, sub=false;
+  for(let i=0;i<darts.length;i++){
+    const c=darts[i]; used++;
+    if((r<=40 && r%2===0) || r===50) att++;            // a dart thrown with a one-dart finish on
+    if(i===2 && R.sub26 && score>26 && score-dv(c)===26){ r=rem-26; score=26; sub=true; break; } // always applies, not a choice
+    const nr=r-dv(c);
+    if(nr<0 || nr===1 || (nr===0 && c[0]!=='D')){ bust=true; break; }
+    r=nr; score+=dv(c);
+    if(r===0){ out=true; break; }
+  }
+  if(bust){ r=rem; score=0; }
+  const raw=dsum(darts);
+  const clean26 = sub || (!bust && !out && darts.length===3 && raw===26 && darts[2]!=='M');
+  return {rem:r, score, sum:sub?26:raw, raw, bust, out, att, used, clean26, sub, ended: bust || out || darts.length>=3};
+}
+
+// Replays a whole game from its turn log.
+function replay(g){
+  const R=rulesOf(g), S0=g.start||301, T=Math.max(1,g.t|0), ids=g.players.slice();
+  const evR={sub26: R.timmy && R.c26 && R.sub26};
+  const mad = R.timmy && R.madness;                     // Super Madness: each throw is rolled when his round starts
+  const tt = R.timmy && (R.freaky || mad) ? (g.tt||[]) : null;   // Freaky Friday: Timmy's darts, rolled when the game starts
+  const throwOf = n => tt ? dsum(tt[n-1]) : T;
+  let L=Infinity, needThrow=false;
+  if(R.timmy && !mad){
+    if(tt){ let s=0; L=Math.max(1,tt.length); for(let i=0;i<tt.length;i++){ s+=dsum(tt[i]); if(s>=S0){ L=i+1; break; } } }
+    else L=Math.ceil(S0/T);
+  }
+  const stell = mad ? 0 : L-1;                           // Super Madness has no Stellrunde
+  const free=n=> !R.timmy || !R.sitOut || (R.free12 && (mad ? n===1 : n<=2)) || (R.stell && n===stell) || (R.lastFree && n===L);
+  const known=n=> !tt || n<=2 || r>=stell;               // what the players can know about round n
+  const P={};
+  ids.forEach(id=>P[id]={id, rem:(g.starts&&g.starts[id])||S0, play:true, out:false, played:0, lastBeat:true, lastScore:null, last26:false, lastSub:false, lastDarts:null, lastSkip:false, lastBust:false, tokens:0, bank:[], lastTrade:false, lastTradeFrom:null, lastGift:null, lastBank:false, dep:0, wd:0, gave:0, got:0,
+    a:{turns:0,darts:0,points:0,att:0,outs:0,best:0,bestOut:0,c26:0,sat:0,busts:0,rolls:0,skips:0,banked:0,trades:0}});
+  let r=1, timmy=S0, done=false, winner=null, queue=[];
+  const rounds=[];
+  let cur=null;
+
+  function beginRound(){                                 // rounds 1..L: Timmy throws first
+    if(mad && !tt[r-1]){ needThrow=true; queue=[]; cur={r, turns:[], sat:[], timmy:Math.max(0,timmy), tthrow:null, tdarts:null}; return; }
+    const th = R.timmy ? throwOf(r) : null;
+    if(R.timmy) timmy-=th;
+    if(mad && timmy<=0 && L===Infinity) L=r;             // only now is his last round known
+    if(r>1) ids.forEach(id=>{
+      const p=P[id], sat=p.played!==r-1;
+      if(free(r) || sat || p.last26) p.play=true;        // sitting out lasts one round; a 26 always plays on
+      else p.play=p.lastBeat;                            // ended last turn below Timmy, or sits out
+      if(!p.play) p.a.sat++;
+    });
+    queue=ids.filter(id=>P[id].play);
+    cur={r, turns:[], sat:ids.filter(id=>!P[id].play), timmy:R.timmy?Math.max(0,timmy):null, tthrow:th, tdarts:tt?(tt[r-1]||null):null};
+    if(!queue.length) endRound();                        // nobody throws: only Timmy plays this round
+  }
+  function endRound(){
+    rounds.push(cur);
+    if(r>=L){                                            // Timmy is through: only 26s get another round
+      const next=ids.filter(id=>P[id].played===r && P[id].last26);
+      ids.forEach(id=>{ P[id].play=next.includes(id); if(!P[id].play) P[id].out=true; });
+      if(!next.length){ done=true; winner='timmy'; queue=[]; return; }
+      r++;
+      queue=next.slice();
+      cur={r, turns:[], sat:[], timmy:null, tthrow:null, tdarts:null};
+    } else { r++; beginRound(); }
+  }
+  beginRound();
+
+  const bankOn = R.timmy && R.c26 && R.trade26;
+  // Each banked 26 remembers who gave it (null = your own). Own ones are used first unless a giver is named.
+  const addTok=(p,from)=>{ p.bank.push(from||null); p.tokens=p.bank.length; };
+  const takeTok=(p,want)=>{ let i=-1;
+    if(want && want!=='own') i=p.bank.indexOf(want);
+    if(i<0) i=p.bank.indexOf(null);
+    if(i<0) i=0;
+    const o=p.bank.splice(i,1)[0]; p.tokens=p.bank.length; return o; };
+  for(const t of (g.turns||[])){
+    if(t.ev){                                            // banked-26 moves: give, put in the vault, take out of it
+      const a=P[t.p], b=P[t.to], log=(done ? (rounds[rounds.length-1]||cur) : cur);
+      let okEv=false;
+      if(t.ev==='give' && !done && bankOn && R.give26 && a && b && a!==b && a.tokens>0){ takeTok(a); addTok(b,a.id); a.gave++; b.got++; okEv=true; }
+      else if(t.ev==='deposit' && bankOn && R.vault26 && a && a.tokens>0){ takeTok(a); a.dep++; okEv=true; }
+      else if(t.ev==='withdraw' && !done && bankOn && R.vault26 && a){ addTok(a,null); a.wd++; okEv=true; }
+      if(okEv && log) (log.events=log.events||[]).push(t);
+      continue;
+    }
+    if(done) break;
+    if(t.p!==queue[0]) continue;
+    const p=P[t.p], before=p.rem;
+    let e = t.skip ? {rem:p.rem, score:0, sum:0, raw:0, bust:false, out:false, att:0, used:0, clean26:false, sub:false} : evalTurn(p.rem, t.d, evR);
+    let s=e;
+    if(t.skip) p.a.skips++;
+    else {
+      if(t.o) s=evalTurn(p.rem, t.o, evR);             // personal stats use the darts really thrown
+      p.a.turns++; p.a.darts+=s.used; p.a.points+=s.score; p.a.att+=s.att;
+      if(s.bust) p.a.busts++;
+      if(s.score>p.a.best) p.a.best=s.score;
+      if(s.clean26 && R.timmy && R.c26) p.a.c26++;
+      if(t.o) p.a.rolls++;
+      if(s.out){ p.a.outs++; p.a.bestOut=Math.max(p.a.bestOut,s.score); }
+    }
+    // Trading a banked 26: the turn scores 0 for you but counts like a 26 for throwing on.
+    // If someone gave you that 26, the points of this turn come off the giver's score instead.
+    let traded=false, banked=false, from=null, gift=null;
+    if(t.trade && bankOn && p.tokens>0 && !e.out){
+      from=takeTok(p, t.trade===true ? 'own' : t.trade);
+      traded=true; p.a.trades++;
+      if(from && from!==p.id && P[from]){
+        const gv=P[from], pts=e.score;
+        if(pts>0 && gv.rem-pts>=2){ gv.rem-=pts; gift={to:from, pts}; if(gv.played===r) gv.lastBeat=!R.timmy || gv.rem<timmy; }
+        else gift={to:from, pts:0};
+      }
+      e={...e, rem:before, score:0, sum:0, bust:false, clean26:false, sub:false};
+    }
+    p.rem=e.rem; p.played=r; p.lastScore=e.score; p.last26=traded || (R.timmy && R.c26 && e.clean26); p.lastSub=e.sub;
+    p.lastDarts=t.skip?null:t.d; p.lastSkip=!!t.skip; p.lastBust=e.bust;
+    p.lastBeat=!R.timmy || e.rem<timmy;
+    // A 26 nobody needed (already below Timmy, or next round known to be free) is banked for later.
+    if(!traded && p.last26 && R.trade26 && r<L && (e.rem<timmy || (free(r+1) && known(r+1)))){ banked=true; addTok(p,null); p.a.banked++; }
+    p.lastTrade=traded; p.lastTradeFrom=traded?(from||'own'):null; p.lastGift=gift; p.lastBank=banked;
+    cur.turns.push({p:t.p, d:t.d, skip:!!t.skip, score:e.score, bust:e.bust, out:e.out, c26:p.last26, sub:e.sub, beat:p.lastBeat,
+      rnd:!!t.o, own:t.o?(s.bust?'bust':s.score):null, o:t.o||null, before, after:e.rem, trade:traded, tradeFrom:traded?(from||'own'):null, gift, bank:banked});
+    queue.shift();
+    if(e.out){ done=true; winner=t.p; rounds.push(cur); continue; }   // later entries can only be vault moves
+    if(!queue.length) endRound();
+  }
+  return {R,evR,S0,T,tt,mad,needThrow,L,stell,free,ids,P,r,timmy:Math.max(0,timmy),done,winner,queue,rounds,cur};
+}
+function phaseOf(st,r){
+  if(!st.R.timmy) return '';
+  if(r>st.L) return 'Overtime';
+  if(r===st.L) return 'Last round';
+  if(r===st.stell) return 'Stellrunde';
+  if(st.R.sitOut && st.R.free12 && (st.mad ? r===1 : r<=2)) return 'Free round';
+  return '';
+}
+// Random throws: three darts land anywhere on the board, each field weighted by its area.
+// Standard board radii in mm: bull 6.35, outer bull 15.9, treble 99-107, double 162-170.
+const BOARD=(()=>{
+  const r2=x=>x*x, tot=r2(170);
+  const rings=[['D25',r2(6.35)],['S25',r2(15.9)],['S',r2(99)],['T',r2(107)],['S',r2(162)],['D',r2(170)]];
+  const per=[]; let prev=0;                               // per-dart probability of each field
+  rings.forEach(([k,a])=>{ const w=(a-prev)/tot; prev=a;
+    if(k.endsWith('25')) per.push([k,w]); else for(let n=1;n<=20;n++) per.push([k+n,w/20]); });
+  const one=new Array(61).fill(0); per.forEach(([c,w])=>one[dv(c)]+=w);
+  let sum=[1]; for(let i=0;i<3;i++){ const nx=new Array(sum.length+60).fill(0);
+    sum.forEach((a,x)=>{ if(a) one.forEach((b,y)=>{ if(b) nx[x+y]+=a*b; }); }); sum=nx; }
+  const avg=sum.reduce((a,p,x)=>a+p*x,0);
+  return {per, sum, avg};
+})();
+function rollDarts(rand=Math.random, per=BOARD.per){
+  const out=[];
+  for(let i=0;i<3;i++){ let u=rand(), c=per[per.length-1][0];
+    for(const [k,w] of per){ if(u<w){ c=k; break; } u-=w; }
+    out.push(c); }
+  return out;
+}
+// Timmy's form for one game: a target average drawn around the board average (sd 10, at most ±22).
+// Only over many games does it come out at the board average; a single game can be hot or cold.
+function drawForm(rand=Math.random){
+  const z=Math.sqrt(-2*Math.log(1-rand()))*Math.cos(2*Math.PI*rand());
+  const c=BOARD.avg-0.9;   // a game ends on the throw that takes him past 0, which nudges game averages up by about 0.9
+  return Math.round(Math.min(c+22, Math.max(c-22, c+10*z))*10)/10;
+}
+// Field odds tilted so three darts average `m`, keeping the board's shape (high fields get likelier when m is high).
+const _tilt={};
+function tiltedPer(m){
+  if(!m) return BOARD.per;
+  if(_tilt[m]) return _tilt[m];
+  const mean=l=>{ let z=0,s=0; BOARD.per.forEach(([c,w])=>{ const q=w*Math.exp(l*dv(c)); z+=q; s+=q*dv(c); }); return s/z; };
+  let lo=-2, hi=2; for(let i=0;i<60;i++){ const mid=(lo+hi)/2; if(mean(mid)<m/3) lo=mid; else hi=mid; }
+  const l=(lo+hi)/2; let z=0; const q=BOARD.per.map(([c,w])=>{ const v=w*Math.exp(l*dv(c)); z+=v; return [c,v]; });
+  return (_tilt[m]=q.map(([c,v])=>[c,v/z]));
+}
+// Super Madness Timmy: roll his next throw whenever a round is about to start and none is stored yet.
+function ensureThrows(g){
+  const R=rulesOf(g); if(!R.timmy || !R.madness) return g;
+  let st=replay(g), guard=0;
+  const per=tiltedPer(g.form);
+  while(st.needThrow && guard++<200){ g.tt=(g.tt||[]).concat([rollDarts(Math.random, per)]); st=replay(g); }
+  return g;
+}
+// Freaky Friday Timmy: all his throws are rolled when the game starts, until he reaches 0.
+function rollTimmy(start, rand=Math.random, per=BOARD.per){ const t=[]; let s=0; while(s<start){ const d=rollDarts(rand, per); t.push(d); s+=dsum(d); } return t; }
+const canFinish=rem=> rem>=2 && rem<=170 && ![169,168,166,165,163,162,159].includes(rem);
+// Checkout routes: every way to finish 2..170 with 1-3 darts, cheapest first.
+// Cost: 100 per dart, then the finishing double's popularity, then how hard the set-up darts are.
+const DPREF=[20,16,10,8,18,12,4,14,6,2,19,17,15,13,11,9,7,5,3,1];
+const dCost=c=> c==='D25' ? 60 : DPREF.indexOf(+c.slice(1))*3;
+const sCost=c=>{ const n=+c.slice(1);
+  if(c==='S25') return 20; if(c[0]==='S') return 0;
+  if(c[0]==='T') return ({20:0,19:1,18:3,17:4})[n] ?? 12;
+  return 25; };
+const CO=(()=>{
+  const darts=[]; for(let n=1;n<=20;n++) darts.push('S'+n,'D'+n,'T'+n); darts.push('S25','D25');
+  const dbl=darts.filter(c=>c[0]==='D'), t={1:{},2:{},3:{}};
+  const add=(n,route,cost)=>{ const v=dsum(route); if(v>170) return; (t[n][v]=t[n][v]||[]).push([cost,route]); };
+  dbl.forEach(d=>add(1,[d],100+dCost(d)));
+  darts.forEach(a=>dbl.forEach(d=>add(2,[a,d],200+sCost(a)+dCost(d))));
+  darts.forEach(a=>darts.forEach(b=>dbl.forEach(d=>add(3,[a,b,d],300+sCost(a)+sCost(b)+dCost(d)+(dv(a)<dv(b)?1:0)))));
+  [1,2,3].forEach(n=>Object.values(t[n]).forEach(l=>{ l.sort((x,y)=>x[0]-y[0]); l.splice(15); }));
+  return t;
+})();
+const LEAVES=DPREF.map(n=>2*n);
+const SETUP_DARTS=(()=>{ const a=[]; for(let n=1;n<=20;n++) a.push('S'+n,'T'+n); a.push('S25'); return a; })();
+// Best route for the darts still in hand, or a set-up dart that leaves a good double.
+function checkoutTip(rem0, pending, R){
+  const left=3-pending.length; if(left<=0) return null;
+  const e=evalTurn(rem0,pending,R); if(e.ended) return null;
+  const rem=e.rem; if(rem<2 || rem>170) return null;
+  let best=null;
+  for(let n=1;n<=left;n++){ const l=CO[n][rem]; if(!l) continue;
+    for(const [cost,route] of l){
+      if(best && cost>=best.cost) break;
+      const t=evalTurn(rem0,pending.concat(route),R);
+      if(t.out && t.used===pending.length+route.length){ best={cost,route}; break; }
+    } }
+  if(best) return {type:'out', route:best.route};
+  let su=null;
+  SETUP_DARTS.forEach(c=>{ const lv=rem-dv(c), i=LEAVES.indexOf(lv); if(i<0) return;
+    const cost=i*10+sCost(c); if(!su || cost<su.cost) su={cost,dart:c,leave:lv}; });
+  return su ? {type:'setup', dart:su.dart, leave:su.leave} : null;
+}
+// 26 tips: the easiest way to finish this turn on a clean 26, and on a 26 by subtraction.
+const T26_SINGLES=(()=>{ const a=[]; for(let n=1;n<=20;n++) a.push('S'+n); a.push('S25'); return a; })();
+const T26_ALL=T26_SINGLES.concat(Array.from({length:20},(_,i)=>'D'+(i+1)), Array.from({length:20},(_,i)=>'T'+(i+1)), ['D25']);
+const c26Cost=c=>{ if(c==='S20'||c==='S1'||c==='S5') return 0; if(c==='S25') return 6; if(c==='D25') return 15;
+  if(c[0]==='S') return 1; if(c[0]==='T') return c==='T20'?6:8; return 10; };
+function tip26(rem0, pending, R){
+  const k=3-pending.length; if(k<=0 || evalTurn(rem0,pending,R).ended) return null;
+  const pool = k===3 ? T26_SINGLES : T26_ALL;
+  let clean=null, sub=null;
+  const tryRoute=route=>{ const e=evalTurn(rem0,pending.concat(route),R);
+    if(e.bust || e.out || !e.clean26 || e.used!==3) return;
+    let cost=route.reduce((a,c)=>a+c26Cost(c),0);
+    for(let i=0;i+1<route.length;i++) if(dv(route[i])<dv(route[i+1])) cost+=0.1;   // bigger number first reads naturally
+    if(e.sub){ if(!sub || cost<sub.cost) sub={cost,route}; } else if(!clean || cost<clean.cost) clean={cost,route}; };
+  const rec=route=>{ if(route.length===k){ tryRoute(route); return; } for(const c of pool) rec(route.concat([c])); };
+  rec([]);
+  return clean||sub ? {clean:clean&&clean.route, sub:sub&&sub.route} : null;
+}
+/* ENGINE END */
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toLocaleDateString('sv-SE');
+const clone=o=>JSON.parse(JSON.stringify(o));
+const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
+const fmtPct=x=>{ const v=x*100; return (v>=10?v.toFixed(0):v>=1?v.toFixed(1):v>=0.1?v.toFixed(2):v.toPrecision(1)).replace('.',',')+' %'; };
+
+const S={mode:'loading', players:{}, games:{}, settings:{}, loaded:{players:false,games:false,config:false},
+  view:'play', lineup:[], mod:'S', pending:[], rolled:null, trade:false, giveFrom:null, canTradeNow:false, range:{k:'all',from:'',to:''}, statPlayer:null, hmSel:null, month:null, entry:(()=>{ try{ return localStorage.getItem('timmy-entry')||'board'; }catch(e){ return 'board'; } })(), imp:null, resultId:null, askEnd:false, askDel:null, showLog:false, stale:false, readOnly:false, newName:''};
+const cfg=()=>{ const st=S.settings||{}; return Object.assign({base:26,offset:0,start:301,dayRule:true,climb:true,tips:true,hcMode:'off',hc:{}}, st, {rules:Object.assign({},DEFAULT_RULES,st.rules||{})}); };
+const allLoaded=()=>S.loaded.players && S.loaded.games && S.loaded.config;
+const nm=id=> id==='timmy' ? 'Timmy' : (S.players[id]?.name || 'Former player');
+
+/* ---------- storage: shared store when available, this device otherwise ---------- */
+const Store={
+  db:null, q:{},
+  async init(){
+    let db=null;
+    try{ if(window.claude && window.claude.use) db=await window.claude.use('db'); }catch(e){ db=null; }
+    if(db){ this.db=db; S.mode='remote'; this.subscribe(); }
+    else { S.mode='local'; this.loadLocal(); }
+    render();
+  },
+  subscribe(){
+    const timer=setTimeout(()=>{ if(!allLoaded()){ S.stale=true; render(); } },10000);
+    const sub=(coll)=>this.db.collection(coll).onSnapshot(snap=>{
+      const o={}; snap.docs.forEach(d=>{ o[d.id]=d.data(); });
+      if(coll==='config') S.settings=o.settings||{}; else S[coll]=o;
+      S.loaded[coll]=true;
+      if(!snap.metadata.fromCache && allLoaded()){ clearTimeout(timer); S.stale=false; }
+      render();
+    }, err=>{ S.loaded[coll]=true; S.stale=true; toast("Your saved games can't be reached right now. Reload the page to try again."); render(); });
+    sub('players'); sub('games'); sub('config');
+  },
+  write(path, fn){
+    const run=()=>fn().catch(e=>{
+      if(e && e.code==='unavailable') return new Promise(r=>setTimeout(r,400+Math.random()*600)).then(fn);
+      throw e;
+    });
+    this.q[path]=(this.q[path]||Promise.resolve()).then(run).catch(e=>this.fail(e));
+  },
+  put(coll,id,data){
+    if(coll==='config') S.settings=data; else S[coll]={...S[coll],[id]:data};
+    if(S.mode==='local'){ this.saveLocal(); return; }
+    const path=coll+'/'+id; this.write(path,()=>this.db.doc(path).set(data));
+  },
+  async putMany(items){
+    items.forEach(([c,id,d])=>{ S[c]={...S[c],[id]:d}; });
+    if(S.mode==='local'){ this.saveLocal(); render(); return; }
+    render();
+    for(const [c,id,d] of items){ const ref=this.db.doc(c+'/'+id);
+      try{ await ref.set(d); }catch(e){
+        if(e && e.code==='unavailable'){ await new Promise(r=>setTimeout(r,800)); try{ await ref.set(d); }catch(e2){ this.fail(e2); return; } }
+        else { this.fail(e); return; } } }
+  },
+  remove(coll,id){
+    const o={...S[coll]}; delete o[id]; S[coll]=o;
+    if(S.mode==='local'){ this.saveLocal(); return; }
+    const path=coll+'/'+id; this.write(path,()=>this.db.doc(path).delete());
+  },
+  fail(e){
+    const c=e && e.code;
+    if(c==='invalid_argument'){ S.readOnly=true; toast("This view can't save. Open the app signed in to the Claude account that owns it."); }
+    else if(c==='quota_exceeded') toast('Storage is full. Delete some old games under Stats.');
+    else toast('That change was not saved. Check the connection and try again.');
+    render();
+  },
+  loadLocal(){
+    try{ const raw=localStorage.getItem('timmy-darts'); if(raw){ const o=JSON.parse(raw); S.players=o.players||{}; S.games=o.games||{}; S.settings=o.settings||{}; } }catch(e){}
+    S.loaded={players:true,games:true,config:true};
+  },
+  saveLocal(){
+    try{ localStorage.setItem('timmy-darts',JSON.stringify({players:S.players,games:S.games,settings:S.settings})); }
+    catch(e){ toast('Could not save on this device.'); }
+  }
+};
+
+/* ---------- derived ---------- */
+function level(){
+  const c=cfg(), td=today();
+  const fin=Object.values(S.games).filter(g=>g.status==='done' && rulesOf(g).timmy);   // only games against Timmy count
+  const wins=fin.filter(g=>g.winner && g.winner!=='timmy').length;
+  const byDay={};
+  fin.forEach(g=>{ const d=byDay[g.day]||(byDay[g.day]={w:0,l:0}); g.winner==='timmy'?d.l++:d.w++; });
+  const losingDays=c.dayRule ? Object.entries(byDay).filter(([d,v])=>d<td && v.w===0 && v.l>0).length : 0;
+  const t=Math.max(1, c.base+c.offset+(c.climb?wins:0)-losingDays);
+  return {t, wins, losses:fin.length-wins, losingDays, today:byDay[td]||{w:0,l:0}, base:c.base, offset:c.offset, climb:c.climb};
+}
+const activeGame=()=>Object.values(S.games).filter(g=>g.status==='active').sort((a,b)=>b.created-a.created)[0]||null;
+const finished=()=>Object.values(S.games).filter(g=>g.status==='done').sort((a,b)=>b.created-a.created);
+function when(ts){ const d=new Date(ts); const td=today(); const ds=d.toLocaleDateString('sv-SE');
+  const time=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  return ds===td ? 'Today '+time : d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})+' '+time; }
+function timmyLabel(g){ const R=rulesOf(g); return !R.timmy?'No Timmy':R.madness?'Madness Timmy':R.freaky?'Freaky Timmy':'Timmy '+g.t; }
+const timmyName=st=> st.mad?'Madness Timmy':st.tt?'Freaky Timmy':'Timmy';
+
+const RULE_DEFS=[
+  {k:'timmy', name:'Timmy', text:x=>`Timmy throws ${x.T} at the start of every round, before everyone else. He reaches 0 in round ${x.L}, and that round is still played. If nobody checks out by then, Timmy wins. Switched off, it's a plain ${x.start} until someone checks out.`},
+  {k:'freaky', name:'Freaky Friday Timmy', needs:['timmy'], text:x=>`Instead of a fixed number, Timmy throws three random darts every round, with the board odds of the Stellrunde roll. Each game he has his own form: some games he averages 50 or more, some 25 or less, and only over many games does it come to about ${Math.round(BOARD.avg)}. Nobody knows in advance when he finishes: the Stellrunde and the last round are announced when they come. Switching this on switches Super Madness off.`},
+  {k:'madness', name:'Super Madness Timmy', needs:['timmy'], text:x=>`Timmy throws three random darts with the board odds and his own form for the game, hot or cold, about ${Math.round(BOARD.avg)} only over many games. Each throw is rolled only when his round starts, so not even the app knows when he finishes. Only round 1 and his last round are free rounds. Round 2 is a normal round and there is no Stellrunde, so no Stellrunde roll either. Switching this on switches Freaky Friday off.`},
+  {k:'sitOut', name:'Stay below Timmy', needs:['timmy'], text:x=>`After your turn, your remaining score has to be below Timmy's total (he has already thrown that round). If it isn't, you sit out the next round, then you throw again. How many points you scored in the turn doesn't matter.`},
+  {k:'free12', name:'Rounds 1 and 2 free', needs:['timmy','sitOut'], text:x=>`Everyone throws in rounds 1 and 2.`},
+  {k:'stell', name:'Stellrunde free', needs:['timmy','sitOut'], text:x=>`Everyone throws in the Stellrunde, the second to last round${x.freaky?'':` (round ${x.L-1})`}.`},
+  {k:'lastFree', name:'Last round free', needs:['timmy','sitOut'], text:x=>`Everyone throws in the last round${x.freaky?'':` (round ${x.L})`}, the one where Timmy reaches 0.`},
+  {k:'c26', name:'Clean 26', needs:['timmy'], text:x=>`Exactly 26 with all three darts, and the third dart is not a miss (13, 13, miss doesn't count). It always lets you throw the next round. In the last round it gets you another round after Timmy is through, played only by those who threw one: keep throwing 26s to stay in, check out to win. Once nobody checks out or throws a 26, Timmy wins.`},
+  {k:'sub26', name:'26 by subtraction', needs:['timmy','c26'], text:x=>`If your first two darts make more than 26 and your third dart is exactly the difference, it's subtracted and the turn counts as 26 (20, 20, then 14: 40 − 14 = 26). It counts like a clean 26 and you go down by 26. You can't choose: it always applies, even when that third dart would have checked you out.`},
+  {k:'trade26', name:'Trade a 26', needs:['timmy','c26'], text:x=>`A 26 you didn't need (you were below Timmy anyway, or the next round is free) is banked. In a later round where your turn isn't enough to throw on, you can trade the banked 26 to throw on anyway. As the price, that turn scores 0. You can bank several; in the last round and overtime a traded 26 gets you another round like a real one.`},
+  {k:'give26', name:'Give a 26 away', needs:['timmy','c26','trade26'], text:x=>`During the game you can give one of your banked 26s to another player in the same game. When they trade it, they score 0 for that turn as usual, and the points they threw come off your score instead, as long as that leaves you at 2 or more. Your own banked 26s are given away first.`},
+  {k:'vault26', name:'26 vault', needs:['timmy','c26','trade26'], text:x=>`Each player has a vault that lasts from game to game. Put a banked 26 in the vault during the game or on the result screen, and take it out in a later game to use it there. Banked 26s left outside the vault are lost when the game ends.`},
+  {k:'roll', name:'Stellrunde roll', needs:['timmy'], text:x=>`In the Stellrunde, after your darts, you can swap your result for a random one: three virtual darts that land anywhere on the board, each field as likely as its area. Totals around 30 to 40 come up most often, 180 about once in 43 million. A random result is final and can't be undone.`},
+  {k:'skip', name:'Skip your turn', text:x=>`Instead of throwing, you can skip your turn and your score stays where it is. Handy in the last round when you can't finish with three darts: skipping there ends your game, like a turn without a 26.`},
+];
+const ruleName=k=>(RULE_DEFS.find(d=>d.k===k)||{}).name||k;
+function rulesSummary(R, start){
+  if(!R.timmy) return `Vanilla ${start}, double out. No Timmy, no house rules.`;
+  const off=RULE_DEFS.filter(d=>!['timmy','freaky','madness'].includes(d.k) && !R[d.k] && (d.needs||[]).every(n=>R[n])).map(d=>d.name);
+  return (off.length?`Off: ${off.join(', ')}.`:'All house rules on.') + (R.madness?' Super Madness Timmy.':R.freaky?' Freaky Friday Timmy.':'');
+}
+
+/* ---------- views ---------- */
+function lobbyHTML(){
+  const lv=level(), c=cfg(), R=c.rules, L=Math.ceil(c.start/lv.t);
+  const players=Object.entries(S.players).filter(([,p])=>!p.archived).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  S.lineup=S.lineup.filter(id=>S.players[id] && !S.players[id].archived);
+  const hs=headStarts(S.lineup), vlt=vaultBalance();
+  const why=[`${lv.base} to start`];
+  if(lv.climb && lv.wins) why.push(`+${lv.wins} game${lv.wins>1?'s':''} won`);
+  if(lv.losingDays) why.push(`−${lv.losingDays} day${lv.losingDays>1?'s':''} without a win`);
+  if(lv.offset) why.push(`${lv.offset>0?'+':'−'}${Math.abs(lv.offset)} set by hand`);
+  const recent=finished().slice(0,5);
+  let card;
+  if(!R.timmy) card=`<section class="timmy-card" aria-label="Today's game">
+        <span class="eyebrow">Timmy is off</span>
+        <div class="tc-num">${c.start}</div>
+        <div class="tc-unit">vanilla, double out</div>
+        <p class="tc-why" style="margin-top:12px">Games without Timmy don't change his number. He's at ${lv.t} for when he's back.</p>
+      </section>`;
+  else if(R.madness) card=`<section class="timmy-card" aria-label="Super Madness Timmy">
+        <span class="eyebrow">Super Madness Timmy throws</span>
+        <div class="tc-num">?!</div>
+        <div class="tc-unit">a fresh random throw every round</div>
+        <dl class="tc-facts">
+          <div><dt>Long-run average</dt><dd>${Math.round(BOARD.avg)}</dd></div>
+          <div><dt>Normal Timmy</dt><dd>${lv.t}</dd></div>
+          <div><dt>Today</dt><dd>${lv.today.w}–${lv.today.l}</dd></div>
+        </dl>
+        <p class="tc-why">Every game he has his own form, hot or cold. Nobody knows when he finishes, not even the app. Only round 1 and his last round are free. No Stellrunde.</p>
+      </section>`;
+  else if(R.freaky) card=`<section class="timmy-card" aria-label="Freaky Friday Timmy">
+        <span class="eyebrow">Freaky Friday Timmy throws</span>
+        <div class="tc-num">?</div>
+        <div class="tc-unit">three random darts every round</div>
+        <dl class="tc-facts">
+          <div><dt>Long-run average</dt><dd>${Math.round(BOARD.avg)}</dd></div>
+          <div><dt>Normal Timmy</dt><dd>${lv.t}</dd></div>
+          <div><dt>Today</dt><dd>${lv.today.w}–${lv.today.l}</dd></div>
+        </dl>
+        <p class="tc-why">Every game he has his own form, hot or cold. Nobody knows when he finishes. The Stellrunde is announced when it comes.</p>
+      </section>`;
+  else card=`<section class="timmy-card" aria-label="Timmy">
+        <span class="eyebrow">Timmy throws</span>
+        <div class="tc-num">${lv.t}</div>
+        <div class="tc-unit">points every round</div>
+        <dl class="tc-facts">
+          <div><dt>Finishes ${c.start}</dt><dd>Round ${L}</dd></div>
+          <div><dt>Stellrunde</dt><dd>Round ${Math.max(1,L-1)}</dd></div>
+          <div><dt>Today</dt><dd>${lv.today.w}–${lv.today.l}</dd></div>
+        </dl>
+        <p class="tc-why">${why.join(' · ')}. Today's score is your wins against his.</p>
+      </section>`;
+  const startLabel=!R.timmy?`Start ${c.start}`:R.madness?`Start ${c.start} against Madness Timmy`:R.freaky?`Start ${c.start} against Freaky Timmy`:`Start ${c.start} against Timmy (${lv.t})`;
+  return `
+  <div class="lobby">
+    <div class="side">
+      ${card}
+      <section class="panel">
+        <h2>Recent games</h2>
+        ${recent.length?`<ul class="games">${recent.map(gameLine).join('')}</ul>`:`<p class="note">Finished games show up here.</p>`}
+      </section>
+    </div>
+    <section class="panel">
+      <h2>Who's playing?</h2>
+      ${players.length?`<div class="chips">${players.map(([id,p])=>{const i=S.lineup.indexOf(id);
+        return `<button class="chip${i>=0?' on':''}" data-act="toggle" data-v="${id}" aria-pressed="${i>=0}">${i>=0?`<span class="ord">${i+1}</span>`:''}${esc(p.name)}</button>`}).join('')}</div>`
+        :`<p class="note">Add everyone who plays. You only do this once; stats follow each name.</p>`}
+      <form id="addForm" class="add" autocomplete="off">
+        <input id="newName" maxlength="24" placeholder="New player name" value="${esc(S.newName)}" aria-label="New player name" ${S.readOnly?'disabled':''}>
+        <button class="btn" type="submit" ${S.readOnly?'disabled':''}>Add player</button>
+      </form>
+      <div>
+        <span class="eyebrow">Throwing order</span>
+        ${S.lineup.length?`<ol class="lineup" style="margin-top:8px">${S.lineup.map((id,i)=>`<li><span>${esc(nm(id))}${hs[id]?` <span class="note">head start ${hs[id]}, starts at ${c.start-hs[id]}</span>`:''}${vlt[id]?` <span class="note sisal">vault: ${vlt[id]} × 26</span>`:''}</span>
+          <button class="iconbtn" data-act="up" data-v="${id}" aria-label="Move ${esc(nm(id))} up" ${i===0?'disabled':''}>↑</button>
+          <button class="iconbtn" data-act="toggle" data-v="${id}" aria-label="Remove ${esc(nm(id))}">✕</button></li>`).join('')}</ol>
+          ${R.timmy?'<p class="note" style="margin-top:8px">Timmy always throws first.</p>':''}`
+        :`<p class="note" style="margin-top:6px">Tap names above in the order you throw.</p>`}
+      </div>
+      <div class="rulesum">
+        <div><span class="eyebrow">House rules</span><p>${rulesSummary(R,c.start)}</p></div>
+        <button class="btn small" data-act="nav" data-v="rules">Change rules</button>
+      </div>
+      <button class="btn primary big" data-act="start" ${!S.lineup.length||S.readOnly?'disabled':''}>${startLabel}</button>
+    </section>
+  </div>`;
+}
+function gameLine(g){
+  const won=g.winner && g.winner!=='timmy';
+  return `<li><span class="who">${g.players.map(id=>esc(nm(id))).join(', ')}<br><span class="note">${when(g.created)} · ${timmyLabel(g)}</span></span>
+    <span class="tag ${won?'win':'loss'}">${won?esc(nm(g.winner))+' won':'Timmy won'}</span></li>`;
+}
+
+function statusOf(st,id){
+  const p=st.P[id];
+  if(st.queue[0]===id) return ['throw','Throwing'];
+  if(p.out) return ['','Out'];
+  if(!p.play) return ['sit','Sits out'];
+  if(p.played===st.r) return ['ok',p.lastSkip?'Skipped':'Thrown'];
+  return ['','Up soon'];
+}
+// Freaky Friday: whether round n is the Stellrunde or the last round stays secret until it comes.
+const knownRound=(st,n)=> !st.tt || n<=2 || st.r>=st.stell;
+function rowSub(st,id){
+  const p=st.P[id], R=st.R, parts=[];
+  if(p.lastSkip) parts.push('Skipped');
+  else if(p.lastDarts){
+    const d=`<span class="darts">${p.lastDarts.map(dartText).join(' · ')}</span>`;
+    parts.push(p.lastBust?`${d} <span class="warn">bust</span>`
+      :p.lastSub?`${d} → 26 <span class="good">by subtraction</span>`
+      :p.lastTrade?(p.lastTradeFrom==='own'?`${d} <span class="good">traded a banked 26: scores 0, throws on</span>`
+        :`${d} <span class="good">traded ${esc(nm(p.lastTradeFrom))}'s 26: scores 0, throws on${p.lastGift&&p.lastGift.pts?`, ${esc(nm(p.lastTradeFrom))} −${p.lastGift.pts}`:''}</span>`)
+      :`${d} = ${p.lastScore}${p.last26?' <span class="good">clean 26</span>':''}${p.lastBank?' <span class="sisal">banked</span>':''}`);
+  }
+  if(!R.timmy) return parts.join('<span aria-hidden="true">·</span>');
+  const nr=st.r+1, nextFree=st.free(nr) && knownRound(st,nr);
+  if(p.out) parts.push('Out after Timmy finished');
+  else if(!p.play){
+    parts.push('<span class="good">Back next round</span>');
+  } else if(p.played===st.r){
+    if(st.r>=st.L) parts.push(p.last26?'<span class="good">Gets another round</span>':'<span class="warn">Out after this round</span>');
+    else if(R.sitOut && !nextFree && !p.last26){
+      const maybe=st.tt && R.stell && !knownRound(st,nr) ? ' unless it\'s the Stellrunde' : '';
+      parts.push(p.lastBeat?'<span class="good">Below Timmy: throws next round</span>':`<span class="warn">Not below Timmy (${st.timmy}): sits out next round${maybe}</span>`);
+    }
+  } else if(R.sitOut && st.r<st.L && !nextFree) parts.push(p.rem<st.timmy?'Below Timmy right now':`Has to get below ${st.timmy}`);
+  return parts.join('<span aria-hidden="true">·</span>');
+}
+// Banked 26s: vault balances across games, the bank panel and its log lines.
+function vaultBalance(){
+  const v={};
+  Object.values(S.games).forEach(g=>{
+    if(!(g.turns||[]).some(t=>t.ev==='deposit'||t.ev==='withdraw')) return;   // stopped games count too: deposited is deposited
+    const st=replay(g); Object.values(st.P).forEach(p=>{ v[p.id]=(v[p.id]||0)+p.dep-p.wd; });
+  });
+  Object.keys(v).forEach(k=>{ if(v[k]<=0) delete v[k]; });
+  return v;
+}
+function evText(t){
+  if(t.ev==='give') return `${esc(nm(t.p))} gave a banked 26 to ${esc(nm(t.to))}`;
+  if(t.ev==='deposit') return `${esc(nm(t.p))} put a banked 26 in the vault`;
+  return `${esc(nm(t.p))} took a 26 out of the vault`;
+}
+function bankEvent(ev, allowDone){
+  if(S.readOnly) return;
+  const g=activeGame() || (allowDone && S.resultId ? S.games[S.resultId] : null); if(!g) return;
+  const g2=clone(g); g2.turns=(g2.turns||[]); g2.turns.push(ev);
+  Store.put('games',g2.id,g2); render();
+}
+function bankPanel(st, ended){
+  const R=st.R; if(!(R.timmy && R.c26 && R.trade26) || S.readOnly) return '';
+  const vault=R.vault26 ? vaultBalance() : {};
+  const rows=st.ids.filter(id=>st.P[id].tokens>0 || (!ended && (vault[id]||0)>0));
+  if(!rows.length) return '';
+  const li=rows.map(id=>{
+    const p=st.P[id], v=vault[id]||0, others=st.ids.filter(x=>x!==id);
+    const acts=[];
+    if(!ended && R.give26 && p.tokens>0 && others.length) acts.push(`<button class="btn small" data-act="giveFrom" data-v="${id}" aria-pressed="${S.giveFrom===id}">Give…</button>`);
+    if(R.vault26 && p.tokens>0) acts.push(`<button class="btn small" data-act="deposit" data-v="${id}">To vault</button>`);
+    if(!ended && R.vault26 && v>0 && !p.out) acts.push(`<button class="btn small" data-act="withdraw" data-v="${id}">From vault</button>`);
+    return `<li><span class="who">${esc(nm(id))} <span class="note">${p.tokens?`${p.tokens} banked${p.bank.some(x=>x)?` (${[...new Set(p.bank.filter(x=>x))].map(x=>`${p.bank.filter(y=>y===x).length} from ${esc(nm(x))}`).join(', ')})`:''}`:'none banked'}${R.vault26?` · vault ${v}`:''}</span></span>
+      <span class="acts">${acts.join('')}</span>
+      ${S.giveFrom===id && !ended?`<span class="give-to"><span class="note">Give to</span>${others.map(o=>`<button class="btn small" data-act="give" data-v="${id}:${o}">${esc(nm(o))}</button>`).join('')}</span>`:''}</li>`;
+  }).join('');
+  return `<section class="bank"><h3>Banked 26s</h3><ul>${li}</ul>${ended?'<p class="note">Banked 26s not put in the vault are lost once you leave this screen.</p>':''}</section>`;
+}
+// Score entry as a dartboard. Rings are widened so every field is easy to tap; the order is the real board's.
+function padBoard(locked){
+  const last=S.pending[S.pending.length-1], hit=[];
+  const field=(d,code,cls)=>{ if(code===last) hit.push(`<path d="${d}" class="hit"/>`);
+    return `<path d="${d}" class="f ${cls}" data-act="dart" data-v="${code}" aria-label="${fieldName(code)}"/>`; };
+  const parts=[], labels=[];
+  BOARD_ORDER.forEach((num,i)=>{
+    const a1=i*18-9, a2=i*18+9, even=i%2===0, sgl=even?'dk':'lt', mul=even?'rd':'gn';
+    parts.push(field(wedge(19,52,a1,a2),'S'+num,sgl), field(wedge(52,66,a1,a2),'T'+num,mul),
+      field(wedge(66,82,a1,a2),'S'+num,sgl), field(wedge(82,97,a1,a2),'D'+num,mul));
+    const t=(i*18-90)*Math.PI/180;
+    labels.push(`<text x="${(107*Math.cos(t)).toFixed(1)}" y="${(107*Math.sin(t)).toFixed(1)}">${num}</text>`);
+  });
+  const ring='M0 -19A19 19 0 1 1 0 19A19 19 0 1 1 0 -19Z M0 -9A9 9 0 1 0 0 9A9 9 0 1 0 0 -9Z';
+  parts.push(field(ring,'S25','gn'));
+  parts.push(field('M0 -9A9 9 0 1 1 0 9A9 9 0 1 1 0 -9Z','D25','rd'));
+  return `<div class="padboard${locked?' locked':''}">
+    <svg viewBox="-118 -118 236 236" role="group" aria-label="Dartboard: tap where the dart landed">
+      <circle r="117" class="surround"/>${parts.join('')}${hit.join('')}<g class="nums">${labels.join('')}</g>
+    </svg></div>`;
+}
+function gameHTML(g){
+  let st=replay(g);
+  if(st.needThrow){ g=ensureThrows(clone(g)); if(!S.readOnly) Store.put('games',g.id,g); st=replay(g); }
+  const R=st.R;
+  if(st.done) return `<div class="loading"><p>This game is finished.</p></div>`;
+  const cur=st.queue[0], p=st.P[cur], e=evalTurn(p.rem,S.pending,st.evR);
+  const ph=phaseOf(st,st.r), nr=st.r+1, nextFree=st.free(nr) && knownRound(st,nr);
+
+  // round track
+  let track='';
+  if(R.timmy){
+    const hide = st.mad ? st.L===Infinity : (st.tt && st.r<st.stell), upto=hide?st.r:st.L;
+    const cells=[];
+    for(let i=1;i<=upto;i++){
+      let cls='cell'; if(i<st.r) cls+=' done'; if(i===st.r) cls+=' now'; if(R.sitOut && st.free(i)) cls+=' free';
+      const mk=i===st.stell&&st.stell>2?'S':i===st.L?'L':'';
+      cells.push(`<span class="${cls}" title="Round ${i}${mk==='S'?' (Stellrunde)':mk==='L'?' (last round)':''}">${i}${mk?`<span class="mk">${mk}</span>`:''}</span>`);
+    }
+    if(hide) cells.push(`<span class="cell" title="Nobody knows when ${timmyName(st)} finishes">?</span>`);
+    if(st.r>st.L) cells.push(`<span class="cell now" title="Overtime">+${st.r-st.L}</span>`);
+    const leg=[R.sitOut?'Green outline: everyone throws.':'', 'S = Stellrunde, L = last round.',
+      st.mad?'Timmy throws a fresh random throw first every round. No Stellrunde.':st.tt?'Timmy throws three random darts first every round.':`Timmy throws ${st.T} first.`].filter(Boolean).join(' ');
+    track=`<div class="track num" aria-label="Rounds">${cells.join('')}</div><p class="legend">${leg}</p>`;
+  }
+
+  // hint for the player throwing
+  const keep26 = R.timmy && R.c26 && e.clean26;
+  const short = e.ended && !e.out && !keep26 && R.timmy && (st.r>=st.L || (R.sitOut && !nextFree && !(e.rem<st.timmy)));
+  const canTrade = R.timmy && R.c26 && R.trade26 && p.tokens>0 && short && !S.readOnly;
+  const tradeOpts = canTrade ? [...new Set(p.bank.map(x=>x||'own'))] : [];
+  const trading = canTrade && tradeOpts.includes(S.trade) ? S.trade : false;
+  S.canTradeNow = canTrade;
+  const giftPts = e.bust ? 0 : e.score;
+  const giftText = gv => { const g0=st.P[gv]; return giftPts>0 && g0.rem-giftPts>=2 ? `${esc(nm(gv))} goes down by ${giftPts} to ${g0.rem-giftPts}` : `${esc(nm(gv))} gets nothing (${giftPts?`${giftPts} would take ${esc(nm(gv))} below 2`:'this turn scored 0'})`; };
+  const tradeLine = more => trading==='own' ? `<strong class="sisal">Your banked 26 traded: this turn scores 0, you stay on ${p.rem} and ${more}.</strong>`
+    : `<strong class="sisal">${esc(nm(trading))}'s 26 traded: you stay on ${p.rem} and ${more}. ${giftText(trading)}.</strong>`;
+  const willBank = R.timmy && R.c26 && R.trade26 && keep26 && e.ended && !e.out && st.r<st.L && (e.rem<st.timmy || nextFree);
+  const canRoll = R.timmy && R.roll && st.r===st.stell && e.ended && !e.out && !S.rolled && !S.readOnly;
+  const rollNote = S.rolled ? `<strong class="sisal">Random result: ${e.raw}</strong><span>Three darts make ${e.raw} with a ${fmtPct(BOARD.sum[e.raw])} chance. Your own darts made ${dsum(S.rolled)}. A random result is final.</span>` : '';
+  let hint='';
+  if(e.bust) hint=`${rollNote}<strong class="warn">Bust.</strong><span>Score goes back to ${p.rem}. Confirm to move on.</span>${trading?tradeLine(st.r>=st.L?'you get another round':'you throw next round'):canTrade?'<span class="sisal">You can trade a banked 26 to throw on.</span>':''}`;
+  else if(e.out) hint=`${rollNote}<strong class="good">Checkout!</strong><span>Confirm to finish the game.</span>`;
+  else {
+    const lines=[];
+    if(rollNote) lines.push(rollNote);
+    else if(canRoll) lines.push('<strong>Stellrunde: keep your result or take a random one. A random result is final.</strong>');
+    const more = st.r>=st.L ? 'you get another round' : 'you throw next round';
+    if(e.sub) lines.push(`<strong class="good">${dv(S.pending[0])+dv(S.pending[1])} − ${dv(S.pending[2])} = 26 by subtraction: ${more}.</strong>`);
+    else if(keep26) lines.push(`<strong class="good">Clean 26: ${more}.</strong>`);
+    if(willBank) lines.push('<span class="sisal">You didn\'t need this 26, so it gets banked for later.</span>');
+    if(trading) lines.push(tradeLine(more));
+    else if(canTrade) lines.push(`<span class="sisal">Not enough to throw on. You can trade a banked 26: ${more}, but this turn scores 0 for you${tradeOpts.some(o=>o!=='own')?', and with a gifted 26 your points go to the giver':''}.</span>`);
+    const tip=cfg().tips ? checkoutTip(p.rem,S.pending,st.evR) : null, left=3-S.pending.length;
+    if(tip && tip.type==='out') lines.push(`<strong class="tip">Checkout: ${tip.route.map(dartText).join(' · ')}</strong>`);
+    else if(tip) lines.push(`<span class="tip">No checkout with ${left} dart${left>1?'s':''} left. Set up with ${dartText(tip.dart)} to leave ${tip.leave} (D${tip.leave/2}).</span>`);
+    const need26 = R.timmy && R.c26 && !e.ended && (st.r>=st.L || (R.sitOut && !nextFree && e.rem>=st.timmy));
+    const t26 = cfg().tips && need26 ? tip26(p.rem,S.pending,st.evR) : null;
+    if(t26){ const parts=[];
+      if(t26.clean) parts.push(t26.clean.map(dartText).join(' · '));
+      if(t26.sub){ const all=S.pending.concat(t26.sub); parts.push(`by subtraction ${t26.sub.map(dartText).join(' · ')} (${dv(all[0])+dv(all[1])} − ${dv(all[2])})`); }
+      lines.push(`<span class="tip">For a 26: ${parts.join(', or ')}</span>`); }
+    if(!S.pending.length && R.skip && R.timmy && st.r>=st.L && !canFinish(p.rem)) lines.push(`<span>No three-dart checkout from ${p.rem}. You can skip your turn.</span>`);
+    if(R.timmy && !keep26 && !trading){
+      if(st.r>=st.L) lines.push(R.c26?'<span>Timmy is through. Check out to win, or throw a clean 26 for another round.</span>':'<span>Timmy is through. Check out to win, or he wins after this round.</span>');
+      else if(R.sitOut && nextFree) lines.push(`<span>Round ${nr} is free: everyone throws.</span>`);
+      else if(R.sitOut) lines.push(e.rem<st.timmy?`<span>Below Timmy's ${st.timmy}: you throw next round.</span>`
+        :`<span>End below Timmy's ${st.timmy} (${e.rem-st.timmy+1} more)${R.c26?' or throw a clean 26':''} to throw next round.</span>`);
+    }
+    hint=lines.join('');
+  }
+  const slots=[0,1,2].map(i=>{const c=S.pending[i]; return `<div class="slot${c?' filled':''}">${c?dartText(c):''}</div>`;}).join('');
+  const scls=(e.bust?'bust':e.out?'out':keep26?'c26':'')+(S.rolled?' rolled':'');
+  const locked=e.ended||S.readOnly;
+  const keys=[]; for(let n=1;n<=20;n++) keys.push(`<button class="key" data-act="key" data-v="${n}" ${locked?'disabled':''}>${S.mod!=='S'?`<small>${S.mod}</small>`:''}${n}</button>`);
+  const undoLabel=S.rolled?'Random result is final':S.pending.length?'Undo dart':'Undo turn';
+  const canUndo=!S.rolled && (S.pending.length || (g.turns||[]).length) && !S.readOnly;
+  const confirmLabel=e.out?'Confirm checkout':e.bust?'Confirm bust':S.pending.length<3?`${3-S.pending.length} dart${3-S.pending.length>1?'s':''} to go`:'Next player';
+
+  let timmyRow='';
+  if(R.timmy){
+    const c=st.cur||{};
+    let sub;
+    if(st.r>st.L) sub=R.c26?'Through. Only 26s and checkouts are left.':'Through.';
+    else if(st.tt) sub=`This round: <span class="darts">${(c.tdarts||[]).map(dartText).join(' · ')}</span> = ${c.tthrow}${st.r>=st.L?' · through':''}`;
+    else sub=st.r>=st.L?(R.c26?'Through. Check out, or throw a clean 26 for another round.':'Through. Check out this round or he wins.'):`Throws ${st.T} first every round · through in round ${st.L}`;
+    timmyRow=`<div class="row timmy">
+        <div class="top"><span class="name">${timmyName(st)}</span><span class="st">Threw first</span></div>
+        <div class="rem">${st.timmy}</div>
+        <div class="sub">${sub}</div>
+      </div>`;
+  }
+  const skipped=(()=>{ if(!R.timmy) return ''; const sk=[];for(let i=st.rounds.length-1;i>=0&&!st.rounds[i].turns.length;i--) sk.unshift(st.rounds[i].r);
+    return sk.length?`<div class="confirmbar"><p>${sk.length>1?`Rounds ${sk[0]}–${sk[sk.length-1]}`:`Round ${sk[0]}`} skipped: everyone had to sit out, so only Timmy threw. Open the round log to see why.</p></div>`:''; })();
+
+  const rounds=st.rounds.slice().reverse();
+  return `
+  ${S.readOnly?`<div class="banner">This view can only show the game. Open the app signed in to the Claude account that owns it to score.</div>`:''}
+  <div class="game">
+    <div class="board">
+      <section class="roundbar">
+        <div class="rb-head">
+          <h2>Round ${st.r>st.L?st.L+' + '+(st.r-st.L):st.r}</h2>
+          ${st.mad?'<span class="phase freaky">Super Madness</span>':st.tt?'<span class="phase freaky">Freaky Friday</span>':''}
+          ${!R.timmy?'<span class="phase">No Timmy</span>':''}
+          ${ph?`<span class="phase">${ph}</span>`:''}
+          <button class="btn small ghost end" data-act="askEnd">End game</button>
+        </div>
+        ${S.askEnd?`<div class="confirmbar"><p>Stop this game? It won't count for stats or Timmy.</p>
+          <button class="btn small" data-act="noEnd">Keep playing</button><button class="btn small primary" data-act="yesEnd">Stop game</button></div>`:''}
+        ${track}
+        ${skipped}
+      </section>
+      ${timmyRow}
+      ${st.ids.map(id=>{const [k,l]=statusOf(st,id); const pp=st.P[id];
+        return `<div class="row${id===cur?' now':''}${k==='sit'?' sit':''}${pp.out?' out':''}">
+          <div class="top"><span class="name">${esc(nm(id))}</span><span class="st ${k}">${l}</span>${pp.tokens?`<span class="st tok">26 banked${pp.tokens>1?' ×'+pp.tokens:''}</span>`:''}</div>
+          <div class="rem">${pp.rem}</div>
+          <div class="sub">${rowSub(st,id)||'&nbsp;'}</div>
+        </div>`;}).join('')}
+      ${bankPanel(st, false)}
+      <section class="log">
+        <button class="toggle" data-act="log" aria-expanded="${S.showLog}">${S.showLog?'Hide':'Show'} round log (${st.rounds.length} finished)</button>
+        ${S.showLog?`<ol>${rounds.length?rounds.map(rd=>`<li><b>Round ${rd.r}</b>
+          <span>${rd.turns.map(t=>`${esc(nm(t.p))} ${t.skip?'skipped':t.bust?'bust':t.score}${t.rnd?` (random, own darts ${t.own})`:''}${t.trade?(t.tradeFrom==='own'?' (traded a banked 26)':` (traded ${esc(nm(t.tradeFrom))}'s 26${t.gift&&t.gift.pts?`, ${esc(nm(t.tradeFrom))} −${t.gift.pts}`:''})`):t.sub?' (26 by subtraction)':t.c26?' (clean 26)':''}${R.timmy&&R.sitOut&&!t.skip&&!t.out&&!t.beat&&!t.c26&&rd.timmy?' (not below Timmy)':''}`).join(', ')||'Nobody threw'}</span>
+          ${(rd.events||[]).length?`<span class="note sisal">${rd.events.map(evText).join('. ')}.</span>`:''}
+          ${rd.sat.length?`<span class="note">Sat out: ${rd.sat.map(id=>esc(nm(id))).join(', ')}</span>`:''}
+          ${rd.timmy!==null?`<span class="note">Timmy threw ${rd.tthrow}, down to ${rd.timmy}</span>`:''}</li>`).join(''):'<li>No finished rounds yet.</li>'}</ol>`:''}
+      </section>
+    </div>
+    <section class="pad${S.entry==='keys'?'':' compact'}" aria-label="Score entry">
+      <div class="pad-who">
+        <div><span class="eyebrow">Round ${st.r>st.L?'overtime':st.r}${ph?' · '+ph:''}</span><h2>${esc(nm(cur))}</h2></div>
+        <div class="live"><span class="eyebrow">Left</span><b>${trading?p.rem:e.rem}</b></div>
+      </div>
+      <div class="slots ${scls}">${slots}<div class="slot sum num">${S.pending.length?(e.bust?'–':e.sum):''}</div></div>
+      <div class="hint" aria-live="polite">${hint}</div>
+      ${S.entry==='keys'?`<div class="mods" role="group" aria-label="Ring">
+        ${[['S','Single'],['D','Double'],['T','Triple']].map(([m,l])=>`<button class="${m}" data-act="mod" data-v="${m}" aria-pressed="${S.mod===m}" ${locked?'disabled':''}>${l}</button>`).join('')}
+      </div>
+      <div class="keys ${S.mod}">${keys.join('')}</div>`:padBoard(locked)}
+      ${S.entry==='keys'?`<div class="extra">
+        <button class="key" data-act="bull" ${locked||S.mod==='T'?'disabled':''}>${S.mod==='D'?'Bull 50':'25'}</button>
+        <button class="key" data-act="miss" ${locked?'disabled':''}>Miss</button>
+        ${R.skip?`<button class="key skipbtn" data-act="skip" ${S.pending.length||S.readOnly?'disabled':''}>Skip turn</button>`:''}
+      </div>`:''}
+      ${canRoll?`<button class="btn big roll" data-act="roll">Random result</button>`:''}
+      ${tradeOpts.map(o=>`<button class="btn big trade" data-act="trade" data-v="${o}" aria-pressed="${trading===o}">${trading===o?'Trading: tap again to keep your score'
+        : o==='own'?'Trade your banked 26 (this turn scores 0)':`Trade ${esc(nm(o))}'s 26 (${giftPts>0&&st.P[o].rem-giftPts>=2?`${esc(nm(o))} gets your ${giftPts}`:`you score 0`})`}</button>`).join('')}
+      <div class="actions${S.entry==='keys'?'':' row4'}">
+        <button class="btn" data-act="undo" ${canUndo?'':'disabled'}>${undoLabel}</button>
+        ${S.entry==='keys'?'':`<button class="btn" data-act="miss" ${locked?'disabled':''}>Miss</button>
+        ${R.skip?`<button class="btn" data-act="skip" ${S.pending.length||S.readOnly?'disabled':''}>Skip turn</button>`:''}`}
+        <button class="btn primary" data-act="confirm" ${e.ended&&!S.readOnly?'':'disabled'}>${confirmLabel}</button>
+      </div>
+    </section>
+  </div>`;
+}
+
+function resultHTML(g){
+  const st=replay(g), lv=level(), R=st.R;
+  const human=g.winner && g.winner!=='timmy';
+  let title, detail;
+  if(human){
+    const lastTurn=st.rounds[st.rounds.length-1].turns.slice(-1)[0];
+    const fin=lastTurn.d[lastTurn.d.length-1];
+    title=`${esc(nm(g.winner))} wins`;
+    detail=`Checked out ${lastTurn.score} on ${fin==='D25'?'the bull':fin} in ${st.r>st.L?'overtime':'round '+st.r}.`;
+    if(R.timmy) detail+=lv.climb?` Timmy goes up to <b>${lv.t}</b> for the next game.`:` Timmy stays at <b>${lv.t}</b>.`;
+  } else {
+    title=`${timmyName(st)} wins`;
+    const td=lv.today;
+    detail=`${st.r>st.L?'Nobody checked out or threw another 26 in overtime':R.c26?`Nobody checked out or threw a clean 26 in round ${st.r}`:`Nobody checked out in round ${st.r}`}. He stays at <b>${lv.t}</b>.${cfg().dayRule&&td.w===0?` If nobody beats him today, he drops to ${Math.max(1,lv.t-1)} tomorrow.`:''}`;
+  }
+  if(st.tt){ const th=st.rounds.filter(rd=>rd.tthrow!=null).map(rd=>rd.tthrow);
+    if(th.length){ const av=th.reduce((a,b)=>a+b,0)/th.length, f=g.form||BOARD.avg;
+      detail+=` ${timmyName(st)} was ${f>=BOARD.avg+8?'on hot form':f<=BOARD.avg-8?'on cold form':'in normal form'}: ${av.toFixed(1)} per throw this game (long-run average ${Math.round(BOARD.avg)}).`; } }
+  return `<div class="result">
+    <section class="hero ${human?'win':'loss'}">
+      <span class="eyebrow">${when(g.created)} · ${timmyLabel(g)}</span>
+      <h1>${title}</h1>
+      <p>${detail}</p>
+    </section>
+    ${(()=>{ const gb=gameBadges(g,st), book=badgeBook(), items=[];
+      g.players.forEach(id=>gb[id].forEach(k=>{ const b=badgeOf(k), first=book[id]&&book[id][k]&&book[id][k].gid===g.id;
+        items.push(`<li class="${b.shame?'shame':''}"><b>${esc(nm(id))}</b> ${b.name}${first?' <span class="newb">first time</span>':''}<span class="note">${b.desc}</span></li>`); }));
+      return items.length?`<section class="panel"><h2>Achievements this game</h2><ul class="achlist">${items.join('')}</ul></section>`:''; })()}
+    ${bankPanel(st, true)}
+    <div class="btns">
+      <button class="btn primary big" data-act="rematch" ${S.readOnly?'disabled':''}>Play again</button>
+      <button class="btn big" data-act="lobby">Change players</button>
+      <button class="btn big ghost" data-act="reopen" ${S.readOnly?'disabled':''}>Undo last turn</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- stats: period, heatmap, export ---------- */
+const RANGES=[['today','Today'],['7','Last 7 days'],['30','Last 30 days'],['last10','Last 10 games'],['last25','Last 25 games'],['all','All'],['custom','Pick dates']];
+function dayOffset(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toLocaleDateString('sv-SE'); }
+function rangeBounds(){
+  const k=S.range.k;
+  if(k==='today') return {from:today(), to:today()};
+  if(k==='7') return {from:dayOffset(6), to:''};
+  if(k==='30') return {from:dayOffset(29), to:''};
+  if(k==='custom') return {from:S.range.from||'', to:S.range.to||''};
+  return {from:'', to:''};
+}
+function statsGames(){
+  const all=finished(), k=S.range.k;
+  if(k==='last10') return all.slice(0,10);
+  if(k==='last25') return all.slice(0,25);
+  const {from,to}=rangeBounds();
+  return all.filter(g=>(!from || g.day>=from) && (!to || g.day<=to));
+}
+const fmtDay=d=>d?new Date(d+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+function rangeText(games){
+  if(!games.length) return 'No games';
+  const days=games.map(g=>g.day).sort();
+  const a=fmtDay(days[0]), b=fmtDay(days[days.length-1]);
+  return `${games.length} game${games.length>1?'s':''} · ${a===b?a:a+' – '+b}`;
+}
+
+// Every dart a player really threw (own darts when a random result was taken).
+function playerDarts(games, id){
+  const c={}; let n=0;
+  games.forEach(g=>{ if(!g.players.includes(id)) return;
+    replay(g).rounds.forEach(rd=>rd.turns.forEach(t=>{
+      if(t.p!==id || t.skip) return;
+      (t.rnd ? (t.o||[]) : t.d).forEach(code=>{ c[code]=(c[code]||0)+1; n++; });
+    }));
+  });
+  return {c, n};
+}
+
+// Dartboard heatmap. Rings are widened for legibility; the field order is the real board's.
+const BOARD_ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+const HEAT=['#252d29','#4b2a25','#7b3029','#ad3a2e','#df4e3b','#ff8f74'];
+function wedge(r1,r2,a1,a2){
+  const pt=(r,a)=>{ const t=(a-90)*Math.PI/180; return (r*Math.cos(t)).toFixed(2)+' '+(r*Math.sin(t)).toFixed(2); };
+  return `M${pt(r2,a1)}A${r2} ${r2} 0 0 1 ${pt(r2,a2)}L${pt(r1,a2)}A${r1} ${r1} 0 0 0 ${pt(r1,a1)}Z`;
+}
+function heatBins(max){
+  const out=[];
+  for(let k=1;k<=5;k++){ const lo=Math.floor(max*(k-1)/5)+1, hi=Math.floor(max*k/5); if(lo<=hi) out.push({k,lo,hi}); }
+  return out;
+}
+const heatBin=(n,max)=> n<=0||!max ? 0 : Math.min(5,Math.max(1,Math.ceil(n/max*5)));
+function fieldName(code){
+  if(code==='M') return 'Miss'; if(code==='D25') return 'Bull (50)'; if(code==='S25') return 'Outer bull (25)';
+  return ({S:'Single ',D:'Double ',T:'Treble '}[code[0]])+code.slice(1);
+}
+function boardSVG(data){
+  const {c,n}=data, max=Math.max(0,...Object.entries(c).filter(([k])=>k!=='M').map(([,v])=>v));
+  const over=[];
+  const shape=(d,code,isCircle)=>{
+    const v=c[code]||0, share=n?v/n:0;
+    const tip=`${fieldName(code)}: ${v} dart${v===1?'':'s'}${n?` (${fmtPct(share)})`:''}`;
+    const fill=HEAT[heatBin(v,max)];
+    if(S.hmSel===code) over.push(isCircle?`<circle r="${d}" class="selo"/>`:`<path d="${d}" class="selo"/>`);
+    const attrs=`fill="${fill}" class="hm" data-act="hm" data-v="${code}"`;
+    return isCircle?`<circle r="${d}" ${attrs}><title>${tip}</title></circle>`:`<path d="${d}" ${attrs}><title>${tip}</title></path>`;
+  };
+  const parts=[], labels=[];
+  BOARD_ORDER.forEach((num,i)=>{
+    const a1=i*18-9, a2=i*18+9;
+    parts.push(shape(wedge(16,56,a1,a2),'S'+num), shape(wedge(56,70,a1,a2),'T'+num), shape(wedge(70,90,a1,a2),'S'+num), shape(wedge(90,102,a1,a2),'D'+num));
+    const t=(i*18-90)*Math.PI/180;
+    labels.push(`<text x="${(113*Math.cos(t)).toFixed(1)}" y="${(113*Math.sin(t)).toFixed(1)}">${num}</text>`);
+  });
+  parts.push(`<path d="M0 -16A16 16 0 1 1 0 16A16 16 0 1 1 0 -16Z M0 -7A7 7 0 1 0 0 7A7 7 0 1 0 0 -7Z" fill-rule="evenodd" fill="${HEAT[heatBin(c.S25||0,max)]}" class="hm" data-act="hm" data-v="S25"><title>${fieldName('S25')}: ${c.S25||0}</title></path>`);
+  if(S.hmSel==='S25') over.push(`<path d="M0 -16A16 16 0 1 1 0 16A16 16 0 1 1 0 -16Z M0 -7A7 7 0 1 0 0 7A7 7 0 1 0 0 -7Z" fill-rule="evenodd" class="selo"/>`);
+  parts.push(shape(7,'D25',true));
+  return `<svg class="board" viewBox="-124 -124 248 248" role="img" aria-label="Dartboard heatmap">
+    <circle r="104" class="rim"/>${parts.join('')}${over.join('')}<g class="nums">${labels.join('')}</g></svg>`;
+}
+function playerPanel(games, ids){
+  if(!ids.length) return '';
+  if(!ids.includes(S.statPlayer)) S.statPlayer=ids[0];
+  const id=S.statPlayer, data=playerDarts(games,id), {c,n}=data;
+  const sumBy=f=>Object.entries(c).filter(([k])=>f(k)).reduce((a,[,v])=>a+v,0);
+  const tre=sumBy(k=>k[0]==='T'), dbl=sumBy(k=>k[0]==='D'&&k!=='D25'), bull=sumBy(k=>k==='D25'||k==='S25'), miss=c.M||0, sgl=n-tre-dbl-bull-miss;
+  const top=Object.entries(c).filter(([k])=>k!=='M').sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max=Math.max(0,...Object.entries(c).filter(([k])=>k!=='M').map(([,v])=>v));
+  const bins=heatBins(max);
+  const selV=S.hmSel?(c[S.hmSel]||0):0;
+  return `<section class="panel">
+    <div class="pp-head">
+      <h2>Player detail</h2>
+      <div class="chips">${ids.map(pid=>`<button class="chip${pid===id?' on':''}" data-act="statPlayer" data-v="${pid}" aria-pressed="${pid===id}">${esc(nm(pid))}</button>`).join('')}</div>
+    </div>
+    ${n?`<div class="pp-body">
+      <figure class="board-wrap">
+        ${boardSVG(data)}
+        <figcaption>
+          <div class="heat-legend" aria-label="Darts per field">
+            <span class="hl-item"><i style="background:${HEAT[0]}"></i>0</span>
+            ${bins.map(b=>`<span class="hl-item"><i style="background:${HEAT[b.k]}"></i>${b.lo===b.hi?b.lo:b.lo+'–'+b.hi}</span>`).join('')}
+            <span class="note">darts per field</span>
+          </div>
+          <p class="hm-info" aria-live="polite">${S.hmSel?`<b>${fieldName(S.hmSel)}</b>: ${selV} of ${n} darts (${fmtPct(selV/n)})`:'Tap a field to see its count.'}</p>
+        </figcaption>
+      </figure>
+      <div class="pp-side">
+        <dl class="mix">
+          <div><dt>Darts</dt><dd>${n}</dd></div>
+          <div><dt>Singles</dt><dd>${fmtPct(sgl/n)}</dd></div>
+          <div><dt>Trebles</dt><dd>${fmtPct(tre/n)}</dd></div>
+          <div><dt>Doubles</dt><dd>${fmtPct(dbl/n)}</dd></div>
+          <div><dt>Bull</dt><dd>${fmtPct(bull/n)}</dd></div>
+          <div><dt>Misses</dt><dd>${fmtPct(miss/n)}</dd></div>
+        </dl>
+        <div>
+          <span class="eyebrow">Most hit</span>
+          <table class="toplist"><tbody>${top.map(([k,v])=>`<tr><td>${fieldName(k)}</td><td>${v}</td><td>${fmtPct(v/n)}</td></tr>`).join('')}</tbody></table>
+        </div>
+        <div><span class="eyebrow">Achievements, all time</span>${badgeChips(badgeBook()[id])}</div>
+        <button class="btn" data-act="exportPlayer">Export ${esc(nm(id))} (CSV)</button>
+        <p class="note">Only darts really thrown count: own darts for random results, no skipped turns. Inner and outer singles are entered the same way, so both rings show the same single count.</p>
+      </div>
+    </div>`:`<p class="note">${esc(nm(id))} has no darts in these games.</p>`}
+  </section>`;
+}
+
+function statsHTML(){
+  const games=statsGames(), lv=level();
+  const rows={};
+  games.forEach(g=>{
+    const st=replay(g);
+    g.players.forEach(id=>{
+      const r=rows[id]||(rows[id]={id,games:0,wins:0,darts:0,points:0,att:0,outs:0,best:0,bestOut:0,c26:0,sat:0,busts:0,rolls:0,skips:0,banked:0,trades:0});
+      const a=st.P[id].a; r.games++; if(g.winner===id) r.wins++;
+      ['darts','points','att','outs','c26','sat','busts','rolls','skips','banked','trades'].forEach(k=>r[k]+=a[k]);
+      r.best=Math.max(r.best,a.best); r.bestOut=Math.max(r.bestOut,a.bestOut);
+    });
+  });
+  const list=Object.values(rows).sort((a,b)=>b.wins-a.wins || b.games-a.games);
+  const tg=games.filter(g=>rulesOf(g).timmy), tw=tg.filter(g=>g.winner!=='timmy').length;
+  const dartsAll=list.reduce((a,r)=>a+r.darts,0);
+  const k=S.range.k;
+  return `<div class="stats">
+    <section class="panel filterbar">
+      <div class="fb-row">
+        <span class="eyebrow">Games to analyse</span>
+        <span class="note">${rangeText(games)}</span>
+      </div>
+      <div class="seg wrap" role="group" aria-label="Games to analyse">${RANGES.map(([v,l])=>`<button data-act="range" data-v="${v}" aria-pressed="${k===v}">${l}</button>`).join('')}</div>
+      ${k==='custom'?`<div class="dates">
+        <label for="statFrom">From <input type="date" id="statFrom" value="${esc(S.range.from||'')}"></label>
+        <label for="statTo">To <input type="date" id="statTo" value="${esc(S.range.to||'')}"></label>
+      </div>`:''}
+      <div><button class="btn small" data-act="exportAll" ${games.length?'':'disabled'}>Export all players (CSV)</button></div>
+    </section>
+    <div class="summary">
+      <div><span class="eyebrow">Games</span><b>${games.length}</b></div>
+      <div><span class="eyebrow">You vs Timmy</span><b>${tw}–${tg.length-tw}</b></div>
+      <div><span class="eyebrow">Darts thrown</span><b>${dartsAll}</b></div>
+      <div><span class="eyebrow">Timmy throws now</span><b>${lv.t}</b></div>
+    </div>
+    ${list.length?`<div class="tablewrap"><table>
+      <thead><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>3-dart avg</th><th>Checkout %</th><th>Best turn</th><th>Best finish</th><th>26s</th><th>Rounds sat out</th><th>Busts</th><th>Skipped turns</th><th>Random results</th><th>26s banked / traded</th></tr></thead>
+      <tbody>${list.map(r=>`<tr><td>${esc(nm(r.id))}</td><td>${r.games}</td><td>${r.wins}</td><td>${pct(r.wins,r.games)}</td>
+        <td>${r.darts?(r.points/r.darts*3).toFixed(1):'–'}</td><td>${pct(r.outs,r.att)}<span class="note"> ${r.att?`(${r.outs}/${r.att})`:''}</span></td>
+        <td>${r.best||'–'}</td><td>${r.bestOut||'–'}</td><td>${r.c26}</td><td>${r.sat}</td><td>${r.busts}</td><td>${r.skips}</td><td>${r.rolls}</td><td>${r.banked} / ${r.trades}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <p class="note">Checkout % counts every dart thrown while a one-dart finish was on (40 or less and even, or 50). Busts count as 0 for the average; skipped turns don't count. 26s include 26 by subtraction. Stats always use the darts you really threw, also when you took a random result.</p>
+    ${playerPanel(games, list.map(r=>r.id))}`
+    :`<section class="panel"><p class="note">${finished().length?'No finished games in this period. Pick a longer one.':'Stats appear after your first finished game.'}</p></section>`}
+    <section class="panel">
+      <h2>Games in this period</h2>
+      ${games.length?`<ul class="games">${games.map(g=>{const won=g.winner&&g.winner!=='timmy';
+        return `<li><span class="who">${g.players.map(id=>esc(nm(id))).join(', ')}<br><span class="note">${when(g.created)} · ${timmyLabel(g)}</span></span>
+        <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="tag ${won?'win':'loss'}">${won?esc(nm(g.winner))+' won':'Timmy won'}</span>
+          ${S.askDel===g.id?`<button class="btn small" data-act="noDel">Keep</button><button class="btn small primary" data-act="yesDel" data-v="${g.id}">Delete game</button>`
+          :`<button class="btn small ghost" data-act="askDel" data-v="${g.id}" ${S.readOnly?'disabled':''}>Delete</button>`}
+        </span></li>`;}).join('')}</ul>`:'<p class="note">No finished games in this period.</p>'}
+      <p class="note">Deleting a game also takes it out of the stats and out of Timmy's number.</p>
+    </section>
+  </div>`;
+}
+
+// CSV: one row per turn, semicolon-separated so German Excel opens it straight away.
+const csvCell=v=>{ const s=String(v??''); return /[;"\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+const yn=b=>b?'yes':'';
+function buildCSV(games, onlyId){
+  const rows=[['date','time','game','player','players','timmy','round','phase','dart1','dart2','dart3','score','left_before','left_after',
+    'bust','checkout','counts_as_26','by_subtraction','skipped','random_result','own_dart1','own_dart2','own_dart3','banked_26','traded_26','points_to_giver','game_winner']];
+  games.slice().sort((a,b)=>a.created-b.created).forEach(g=>{
+    if(onlyId && !g.players.includes(onlyId)) return;
+    const st=replay(g), time=new Date(g.created).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    st.rounds.forEach(rd=>{ const ph=phaseOf(st,rd.r); rd.turns.forEach(t=>{
+      if(onlyId && t.p!==onlyId) return;
+      const d=t.d||[], o=t.rnd?(t.o||[]):[];
+      rows.push([g.day,time,g.id,nm(t.p),g.players.map(nm).join(', '),timmyLabel(g),rd.r,ph,d[0]||'',d[1]||'',d[2]||'',
+        t.skip?'':t.score,t.before,t.after,yn(t.bust),yn(t.out),yn(t.c26),yn(t.sub),yn(t.skip),yn(t.rnd),o[0]||'',o[1]||'',o[2]||'',yn(t.bank),t.trade?(t.tradeFrom==='own'?'own':nm(t.tradeFrom)):'',t.gift&&t.gift.pts?t.gift.pts:'',
+        g.winner==='timmy'?'Timmy':nm(g.winner)]);
+    }); });
+  });
+  return '﻿'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n')+'\r\n';
+}
+function exportName(who){
+  const games=statsGames(), days=games.map(g=>g.day).sort();
+  const span=days.length?(days[0]===days[days.length-1]?days[0]:days[0]+'_'+days[days.length-1]):'none';
+  return ('timmy-darts_'+who+'_'+span).replace(/[^\w.-]+/g,'-')+'.csv';
+}
+async function saveFile(filename, text){
+  let dl=null;
+  try{ if(window.claude && window.claude.use) dl=await window.claude.use('downloads'); }catch(e){ dl=null; }
+  if(dl){
+    try{ await dl.save({filename, data:text}); toast('Saved '+filename); }
+    catch(e){ if(e && e.code==='declined') return; if(e && e.code==='rate_limited') toast('A save is already waiting for your answer.'); else toast("The file couldn't be saved here."); }
+    return;
+  }
+  try{                                                   // standalone page: a normal browser download
+    const url=URL.createObjectURL(new Blob([text],{type:filename.endsWith('.json')?'application/json':'text/csv;charset=utf-8'}));
+    const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+  }catch(e){ toast("The file couldn't be saved here."); }
+}
+function loadRange(){ try{ const r=JSON.parse(localStorage.getItem('timmy-stats-range')||'null'); if(r && r.k) S.range=r; }catch(e){} }
+function saveRange(){ try{ localStorage.setItem('timmy-stats-range',JSON.stringify(S.range)); }catch(e){} }
+
+function sw(act, on, label, disabled, v){
+  return `<button class="switch" role="switch" aria-checked="${!!on}" aria-label="${esc(label)}" data-act="${act}"${v?` data-v="${v}"`:''} ${disabled||S.readOnly?'disabled':''}><span></span></button>`;
+}
+function rulesHTML(){
+  const c=cfg(), R=c.rules, lv=level(), T=lv.t, L=Math.ceil(c.start/T);
+  const x={T,L,start:c.start,freaky:R.freaky||R.madness};
+  const all=Object.entries(S.players).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  const item=(d,i)=>{
+    const needsOff=(d.needs||[]).filter(n=>!R[n]), active=R[d.k] && !needsOff.length;
+    return `<li class="${active?'':'off'}"><span class="k">${i}</span><h3>${d.name}</h3>
+      <p>${d.text(x)}${needsOff.length?` <span class="note">Needs ${needsOff.map(ruleName).join(' and ')}.</span>`:''}</p>
+      ${sw('rule',R[d.k],d.name,needsOff.length,d.k)}</li>`;
+  };
+  const isVanilla=!R.timmy, isAll=RULE_DEFS.every(d=>d.k==='freaky'||d.k==='madness'||R[d.k]);
+  return `<div class="rules">
+    <section class="panel">
+      <div class="rules-head">
+        <h2>House rules</h2>
+        <div class="presets">
+          <button class="btn small" data-act="preset" data-v="all" aria-pressed="${isAll}">All house rules</button>
+          <button class="btn small" data-act="preset" data-v="vanilla" aria-pressed="${isVanilla}">Vanilla ${c.start}</button>
+        </div>
+      </div>
+      <ol class="rulelist">
+        <li><span class="k">1</span><h3>Base game</h3><p>${c.start}, double out. A turn busts if it goes below 0, leaves 1, or reaches 0 without a double. A bust puts your score back and counts as 0 points.</p></li>
+        ${RULE_DEFS.map((d,i)=>item(d,i+2)).join('')}
+      </ol>
+      <p class="note">Changes apply from the next game you start. A game in progress keeps the rules it started with.</p>
+    </section>
+    <div class="side">
+      <section class="panel">
+        <h2>Timmy's number</h2>
+        <div>
+          <div class="setting"><span>Starting number</span>
+            <span class="stepper"><button class="iconbtn" data-act="base" data-v="-1" aria-label="Lower">−</button><b>${c.base}</b><button class="iconbtn" data-act="base" data-v="1" aria-label="Raise">+</button></span></div>
+          <div class="setting"><span>Correct by hand<br><span class="note">Now ${T}. Use this if a game wasn't entered.</span></span>
+            <span class="stepper"><button class="iconbtn" data-act="offset" data-v="-1" aria-label="Lower">−</button><b>${c.offset>0?'+':''}${c.offset}</b><button class="iconbtn" data-act="offset" data-v="1" aria-label="Raise">+</button></span></div>
+          <div class="setting"><span>+1 for every game you win</span>${sw('climb',c.climb,'+1 for every game you win')}</div>
+          <div class="setting"><span>−1 after a day without a win</span>${sw('dayRule',c.dayRule,'−1 after a day without a win')}</div>
+          <div class="setting"><span>Starting score</span>
+            <span class="seg">${[301,501].map(v=>`<button data-act="startScore" data-v="${v}" aria-pressed="${c.start===v}">${v}</button>`).join('')}</span></div>
+        </div>
+        <p class="note">Only games with Timmy change his number, Freaky Friday and Super Madness games included.</p>
+      </section>
+      ${sidePanels()}
+      <section class="panel">
+        <h2>Players</h2>
+        ${all.length?`<ul class="plist">${all.map(([id,p])=>`<li><span class="${p.archived?'arch':''}">${esc(p.name)}${p.archived?' (hidden)':''}</span>
+          ${p.archived?`<button class="btn small" data-act="restore" data-v="${id}">Show again</button>`:`<button class="btn small ghost" data-act="archive" data-v="${id}">Hide</button>`}</li>`).join('')}</ul>
+          <p class="note">Hidden players keep their stats but don't appear in the player list.</p>`:'<p class="note">Add players on the Play tab.</p>'}
+      </section>
+    </div>
+  </div>`;
+}
+
+/* ---------- league: achievements, rating, months, handicaps, backup ---------- */
+const BADGES=[
+  {k:'slayer', name:'Timmy Slayer', desc:'Win a game against Timmy.'},
+  {k:'freaky', name:'Freaky Slayer', desc:'Beat Freaky Friday Timmy.'},
+  {k:'madness', name:'Madness Slayer', desc:'Beat Super Madness Timmy.'},
+  {k:'madhouse', name:'Madhouse', desc:'Win on D1.'},
+  {k:'overtime', name:'Overtime Hero', desc:'Win after Timmy is through.'},
+  {k:'comeback', name:'Comeback Kid', desc:'Win after sitting out 3 or more rounds.'},
+  {k:'ton80', name:'180', desc:'Three treble 20s in one turn.'},
+  {k:'ton', name:'Ton', desc:'100 or more in one turn.'},
+  {k:'highfinish', name:'High Finish', desc:'Check out 100 or more.'},
+  {k:'bigfish', name:'Big Fish', desc:'Check out 170.'},
+  {k:'bullfinish', name:'Bull Finish', desc:'Check out on the bull.'},
+  {k:'shanghai', name:'Shanghai', desc:'Single, double and treble of the same number in one turn.'},
+  {k:'streak26', name:'26 Streak', desc:'Three 26s in a row in one game.'},
+  {k:'subtractor', name:'Subtractor', desc:'Score a 26 by subtraction.'},
+  {k:'lucky', name:'Lucky Roll', desc:'Take a random result that beats your own darts by 40 or more.'},
+  {k:'regular', name:'Regular', desc:'Play 25 games.'},
+  {k:'veteran', name:'Veteran', desc:'Play 100 games.'},
+  {k:'buster', name:'Bust Master', desc:'Bust 3 times in one game.', shame:true},
+  {k:'d1', name:'D1 Purgatory', desc:'Throw 9 or more darts at D1 in one game.', shame:true},
+  {k:'drag', name:'Drag', desc:'Three 26s in a row after Timmy finished, and still no checkout.', shame:true},
+];
+const badgeOf=k=>BADGES.find(b=>b.k===k)||{k,name:k,desc:''};
+const ownScore=t=> t.skip ? 0 : t.rnd ? (t.own==='bust'?0:t.own) : t.score;
+const ownDarts=t=> t.skip ? [] : t.rnd ? (t.o||[]) : (t.d||[]);
+function gameBadges(g, st){
+  st=st||replay(g); const R=st.R, out={};
+  g.players.forEach(id=>{
+    const b=new Set(), turns=[];
+    st.rounds.forEach(rd=>rd.turns.forEach(t=>{ if(t.p===id) turns.push({...t, rr:rd.r}); }));
+    const win=g.winner===id, last=turns[turns.length-1];
+    if(win && R.timmy) b.add('slayer');
+    if(win && st.tt && !st.mad) b.add('freaky');
+    if(win && st.mad) b.add('madness');
+    if(win && st.r>st.L) b.add('overtime');
+    if(win && st.P[id].a.sat>=3) b.add('comeback');
+    if(win && last && last.out){ const fin=last.d[last.d.length-1];
+      if(fin==='D1') b.add('madhouse'); if(fin==='D25') b.add('bullfinish');
+      if(last.score>=100) b.add('highfinish'); if(last.score===170) b.add('bigfish'); }
+    let streak=0, d1=0;
+    turns.forEach(t=>{
+      const od=ownDarts(t), os=ownScore(t);
+      if(od.length===3 && od.every(c=>c==='T20')) b.add('ton80');
+      if(os>=100) b.add('ton');
+      const nums={}; od.forEach(c=>{ if(c!=='M' && !c.endsWith('25')) (nums[c.slice(1)]=nums[c.slice(1)]||new Set()).add(c[0]); });
+      if(Object.values(nums).some(s=>s.size===3)) b.add('shanghai');
+      if(t.sub) b.add('subtractor');
+      if(t.rnd && !t.bust && t.score-os>=40) b.add('lucky');
+      if(!t.skip){ streak = (t.c26 && !t.trade) ? streak+1 : 0; if(streak>=3) b.add('streak26'); }
+      let r=t.before;
+      for(const c of (t.d||[])){ if(r===2) d1++; const nr=r-dv(c); if(nr<0||nr===1||(nr===0&&c[0]!=='D')) break; r=nr; if(r===0) break; }
+    });
+    if(st.P[id].a.busts>=3) b.add('buster');
+    if(d1>=9) b.add('d1');
+    let ds=0, dmax=0;                                    // 26s in a row from the round Timmy reached 0
+    turns.forEach(t=>{ if(t.rr>=st.L && !t.skip){ ds=(t.c26 && !t.trade) ? ds+1 : 0; dmax=Math.max(dmax,ds); } });
+    if(R.timmy && dmax>=3 && !win) b.add('drag');
+    out[id]=b;
+  });
+  return out;
+}
+// All-time badge book: player -> badge -> {n, first day, game id where first earned}
+function badgeBook(){
+  const book={}, played={};
+  finished().slice().reverse().forEach(g=>{
+    const gb=gameBadges(g);
+    g.players.forEach(id=>{
+      played[id]=(played[id]||0)+1;
+      const pb=book[id]||(book[id]={});
+      const add=k=>{ const e=pb[k]||(pb[k]={n:0,first:g.day,gid:g.id}); e.n++; };
+      gb[id].forEach(add);
+      if(played[id]===25) add('regular');
+      if(played[id]===100) add('veteran');
+    });
+  });
+  return book;
+}
+// Rating (Elo): the winner beats everyone else in the game, Timmy included when he plays.
+function ratings(){
+  const R={}, last={}, n={}, get=id=>R[id]??1000;
+  finished().slice().reverse().forEach(g=>{
+    const parts=g.players.slice(); if(rulesOf(g).timmy) parts.push('timmy');
+    if(!g.winner || !parts.includes(g.winner)) return;
+    const pre={}, delta={}; parts.forEach(id=>{ pre[id]=get(id); delta[id]=0; });
+    parts.forEach(id=>{ if(id===g.winner) return;
+      const ch=24*(1-1/(1+Math.pow(10,(pre[id]-pre[g.winner])/400)));
+      delta[g.winner]+=ch; delta[id]-=ch; });
+    parts.forEach(id=>{ R[id]=pre[id]+delta[id]; last[id]=delta[id]; n[id]=(n[id]||0)+1; });
+  });
+  return Object.keys(R).map(id=>({id, r:R[id], last:last[id], n:n[id]})).sort((a,b)=>b.r-a.r);
+}
+function monthTable(month){
+  const games=finished().filter(g=>g.day.slice(0,7)===month), rows={};
+  games.forEach(g=>{ const st=replay(g), parts=g.players.slice(); if(rulesOf(g).timmy) parts.push('timmy');
+    parts.forEach(id=>{ const r=rows[id]||(rows[id]={id,games:0,wins:0,points:0,darts:0}); r.games++; if(g.winner===id) r.wins++;
+      if(id!=='timmy'){ const a=st.P[id].a; r.points+=a.points; r.darts+=a.darts; } }); });
+  const avg=r=>r.darts?r.points/r.darts*3:0;
+  return {games, list:Object.values(rows).sort((a,b)=>b.wins-a.wins || (b.wins/b.games)-(a.wins/a.games) || avg(b)-avg(a))};
+}
+const monthLabel=m=>new Date(m+'-15T12:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+function badgeChips(pb){
+  const ks=BADGES.filter(b=>pb && pb[b.k]);
+  return ks.length ? `<div class="badges-inline">${ks.map(b=>`<span class="bchip${b.shame?' shame':''}" title="${esc(b.desc)}">${b.name}${pb[b.k].n>1?` ×${pb[b.k].n}`:''}</span>`).join('')}</div>` : '<p class="note">No achievements yet.</p>';
+}
+function rankingHTML(){
+  const cm=today().slice(0,7);
+  const months=[...new Set(finished().map(g=>g.day.slice(0,7)).concat([cm]))].sort();
+  if(!S.month || !months.includes(S.month)) S.month=cm;
+  const i=months.indexOf(S.month), older=months[i-1], newer=months[i+1];
+  const mt=monthTable(S.month), isCur=S.month===cm;
+  const top=mt.list[0], champ=top && top.wins ? top : null;
+  const avg=r=>r.darts?(r.points/r.darts*3).toFixed(1):'–';
+  const el=ratings(), book=badgeBook();
+  const past=months.filter(m=>m<cm).reverse().map(m=>{ const t=monthTable(m).list[0]; return {m, t:t&&t.wins?t:null}; });
+  return `<div class="ranking">
+    <section class="panel">
+      <div class="pp-head">
+        <h2>${monthLabel(S.month)}</h2>
+        <div class="monthnav">
+          <button class="iconbtn" data-act="month" data-v="${older||''}" aria-label="Earlier month" ${older?'':'disabled'}>‹</button>
+          <button class="iconbtn" data-act="month" data-v="${newer||''}" aria-label="Later month" ${newer?'':'disabled'}>›</button>
+        </div>
+      </div>
+      ${champ?`<div class="champ"><span class="eyebrow">${isCur?'Leading this month':'Champion'}</span><b>${esc(nm(champ.id))}</b><span>${champ.wins} win${champ.wins>1?'s':''} in ${champ.games} game${champ.games>1?'s':''}</span></div>`
+        :`<p class="note">${isCur?'No wins yet this month.':'No games this month.'}</p>`}
+      ${mt.list.length?`<div class="tablewrap flat"><table>
+        <thead><tr><th>#</th><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>3-dart avg</th></tr></thead>
+        <tbody>${mt.list.map((r,j)=>`<tr${r.id==='timmy'?' class="timmyrow"':''}><td>${j+1}</td><td>${esc(nm(r.id))}</td><td>${r.games}</td><td>${r.wins}</td><td>${pct(r.wins,r.games)}</td><td>${r.id==='timmy'?'–':avg(r)}</td></tr>`).join('')}</tbody>
+      </table></div><p class="note">Most wins takes the month; ties go to the better win % and then the better average. Timmy takes part too.</p>`:''}
+    </section>
+    <section class="panel">
+      <h2>Rating</h2>
+      ${el.length?`<div class="tablewrap flat"><table>
+        <thead><tr><th>#</th><th>Player</th><th>Rating</th><th>Last game</th><th>Games</th></tr></thead>
+        <tbody>${el.map((r,j)=>`<tr${r.id==='timmy'?' class="timmyrow"':''}><td>${j+1}</td><td>${esc(nm(r.id))}${r.n<5?' <span class="note">new</span>':''}</td><td>${Math.round(r.r)}</td>
+          <td class="${r.last>0.5?'good':r.last<-0.5?'warn':''}">${r.last>=0.5?'+':''}${Math.round(r.last)}</td><td>${r.n}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <p class="note">Everyone starts at 1000. The winner takes points from everyone else in the game, Timmy included. Beating someone rated higher earns more.</p>`
+      :'<p class="note">The rating starts with your first finished game.</p>'}
+    </section>
+    <section class="panel">
+      <h2>Hall of champions</h2>
+      ${past.length?`<ul class="games">${past.map(x=>`<li><span>${monthLabel(x.m)}</span><b>${x.t?esc(nm(x.t.id))+` <span class="note">${x.t.wins} wins</span>`:'<span class="note">No winner</span>'}</b></li>`).join('')}</ul>`
+        :'<p class="note">The first champion is crowned when this month ends.</p>'}
+    </section>
+    <section class="panel span2">
+      <h2>Achievements</h2>
+      <div class="badgegrid">${BADGES.map(b=>{ const holders=Object.entries(book).filter(([,pb])=>pb[b.k]).map(([id,pb])=>esc(nm(id))+(pb[b.k].n>1?` ×${pb[b.k].n}`:''));
+        return `<div class="badge${b.shame?' shame':''}${holders.length?' got':''}"><b>${b.name}</b><span>${b.desc}</span><span class="holders">${holders.length?holders.join(', '):'Nobody yet'}</span></div>`; }).join('')}</div>
+    </section>
+  </div>`;
+}
+
+// Handicaps: a head start lowers a player's starting score. Timmy keeps the full score.
+function autoHC(){
+  const from=dayOffset(29), agg={};
+  finished().filter(g=>g.day>=from).forEach(g=>{ const st=replay(g);
+    g.players.forEach(id=>{ const a=st.P[id].a, x=agg[id]||(agg[id]={p:0,d:0}); x.p+=a.points; x.d+=a.darts; }); });
+  const avg={}; Object.entries(agg).forEach(([id,x])=>{ if(x.d>=30) avg[id]=x.p/x.d*3; });
+  const best=Math.max(0,...Object.values(avg)), hs={};
+  Object.entries(avg).forEach(([id,a])=>{ hs[id]=Math.min(120, Math.round((best-a)*4/5)*5); });
+  return {avg, hs};
+}
+function headStarts(ids){
+  const c=cfg(), out={};
+  if(c.hcMode==='off') return out;
+  const auto=c.hcMode==='auto'?autoHC().hs:null;
+  ids.forEach(id=>{ const v=auto?(auto[id]||0):Math.max(0,(c.hc||{})[id]||0); if(v>0) out[id]=Math.min(v, c.start-50); });
+  return out;
+}
+function sidePanels(){
+  const c=cfg(), mode=c.hcMode;
+  const ps=Object.entries(S.players).filter(([,p])=>!p.archived).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  const auto=mode==='auto'?autoHC():null;
+  const imp=S.imp;
+  return `
+      <section class="panel">
+        <h2>Helpers</h2>
+        <div class="setting"><span>Enter darts with</span>
+          <span class="seg">${[['board','Dartboard'],['keys','Keypad']].map(([v,l])=>`<button data-act="entry" data-v="${v}" aria-pressed="${(S.entry||'board')===v}">${l}</button>`).join('')}</span></div>
+        <div class="setting"><span>Checkout and 26 tips on the dart pad<br><span class="note">Shows a checkout route like T20 · T11 · D14, or a set-up dart when no checkout is on. When you need a 26, it also shows how to get one, clean or by subtraction.</span></span>${sw('tips',c.tips,'Checkout and 26 tips')}</div>
+      </section>
+      <section class="panel">
+        <h2>Handicaps</h2>
+        <p class="note">A head start lowers a player's starting score: 50 means starting at ${c.start-50}. Timmy always starts at ${c.start}. Applies from the next game.</p>
+        <span class="seg" role="group" aria-label="Handicaps">${[['off','Off'],['manual','Set by hand'],['auto','Automatic']].map(([v,l])=>`<button data-act="hcMode" data-v="${v}" aria-pressed="${mode===v}">${l}</button>`).join('')}</span>
+        ${mode==='off'||!ps.length?'':`<ul class="plist">${ps.map(([id,p])=>`<li><span>${esc(p.name)}${auto?`<br><span class="note">${auto.avg[id]!=null?'Average '+auto.avg[id].toFixed(1):'Not enough darts yet'}</span>`:''}</span>
+          ${mode==='manual'?`<span class="stepper"><button class="iconbtn" data-act="hc" data-v="${id}:-10" aria-label="Less head start for ${esc(p.name)}">−</button><b>${(c.hc||{})[id]||0}</b><button class="iconbtn" data-act="hc" data-v="${id}:10" aria-label="More head start for ${esc(p.name)}">+</button></span>`
+            :`<b class="hcv num">${auto.hs[id]||0}</b>`}</li>`).join('')}</ul>`}
+        ${mode==='auto'?'<p class="note">4 points of head start for every point of 3-dart average below the best player, from the last 30 days (at least 30 darts), rounded to 5, at most 120.</p>':''}
+      </section>
+      <section class="panel">
+        <h2>Backup</h2>
+        <p class="note">Save all players, games and settings in one file. Importing adds the finished games and players that are missing here and deletes nothing, so it also moves your games between the Claude app and the standalone page.</p>
+        <div class="btnrow">
+          <button class="btn" data-act="backup">Export backup</button>
+          <label class="btn${S.readOnly?' disabled':''}" for="importFile">Import backup</label>
+          <input type="file" id="importFile" accept=".json,application/json" hidden ${S.readOnly?'disabled':''}>
+        </div>
+        ${imp?`<div class="confirmbar"><p>Backup${imp.when?' from '+esc(new Date(imp.when).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})):''}: ${imp.games.length} games, ${imp.players.length} players. <b>${imp.newG} games and ${imp.newP} players are new.</b></p>
+          <button class="btn small" data-act="cancelImport">Cancel</button>
+          <button class="btn small" data-act="doImport" data-v="settings" ${imp.settings?'':'disabled'}>Add and use its settings</button>
+          <button class="btn small primary" data-act="doImport" data-v="" ${imp.newG||imp.newP?'':'disabled'}>Add missing</button></div>`:''}
+      </section>`;
+}
+function prepareImport(o){
+  if(!o || typeof o!=='object' || !o.games || !o.players || typeof o.games!=='object') throw new Error('bad');
+  const games=Object.values(o.games).filter(g=>g && typeof g.id==='string' && g.status==='done' && Array.isArray(g.players) && Array.isArray(g.turns));
+  const players=Object.entries(o.players).filter(([id,p])=>p && typeof p.name==='string');
+  S.imp={when:o.exported||'', games, players, settings:o.settings&&typeof o.settings==='object'?o.settings:null,
+    newG:games.filter(g=>!S.games[g.id]).length, newP:players.filter(([id])=>!S.players[id]).length};
+  render();
+}
+
+/* ---------- render ---------- */
+function render(){
+  const ae=document.activeElement, fid=ae&&ae.id, sel=(fid&&typeof ae.selectionStart==='number')?ae.selectionStart:null;
+  document.querySelectorAll('[data-act="nav"]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===S.view?'page':'false'));
+  const sy=$('#sync');
+  if(S.mode==='loading'){ sy.textContent='Connecting…'; sy.className='sync'; }
+  else if(S.mode==='local'){ sy.textContent='Saved on this device only'; sy.className='sync warn'; }
+  else if(S.stale){ sy.textContent='Not synced'; sy.className='sync warn'; }
+  else { sy.textContent='Saved'; sy.className='sync ok'; }
+  let html;
+  if(S.mode==='loading' || !allLoaded()) html=`<div class="loading"><p>${S.stale?"Your saved games can't be reached yet. Check the connection.":'Loading your games…'}</p></div>`;
+  else if(S.view==='stats') html=statsHTML();
+  else if(S.view==='rules') html=rulesHTML();
+  else if(S.view==='ranking') html=rankingHTML();
+  else { const g=activeGame();
+    if(g) html=gameHTML(g);
+    else if(S.resultId && S.games[S.resultId] && S.games[S.resultId].status==='done') html=resultHTML(S.games[S.resultId]);
+    else html=lobbyHTML(); }
+  $('#view').innerHTML=html;
+  if(fid){ const el=document.getElementById(fid); if(el){ el.focus(); if(sel!==null && el.setSelectionRange) try{el.setSelectionRange(sel,sel);}catch(e){} } }
+}
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,4500); }
+
+let wake=null;
+async function keepAwake(){ try{ if(!wake && 'wakeLock' in navigator){ wake=await navigator.wakeLock.request('screen'); wake.addEventListener('release',()=>wake=null); } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && activeGame()) keepAwake(); });
+
+/* ---------- actions ---------- */
+function newGame(players){
+  const c=cfg(), R=clone(c.rules);
+  const g={id:uid(), created:Date.now(), day:today(), t:level().t, start:c.start, players:players.slice(), turns:[], status:'active', rules:R};
+  if(R.timmy && (R.madness || R.freaky)) g.form=drawForm();      // this game's form, hot or cold
+  if(R.timmy && R.madness){ g.tt=[]; ensureThrows(g); }
+  else if(R.timmy && R.freaky) g.tt=rollTimmy(c.start, Math.random, tiltedPer(g.form));
+  const hs=headStarts(players); if(Object.keys(hs).length){ g.starts={}; Object.entries(hs).forEach(([id,v])=>g.starts[id]=c.start-v); }       // Freaky Timmy's throws are fixed now, revealed round by round
+  S.pending=[]; S.rolled=null; S.trade=false; S.mod='S'; S.resultId=null; S.askEnd=false; S.showLog=false;
+  Store.put('games',g.id,g); keepAwake();
+}
+function addDart(code){
+  const g=activeGame(); if(!g || S.readOnly || S.rolled) return;
+  const st=replay(g), p=st.P[st.queue[0]]; if(!p) return;
+  if(evalTurn(p.rem,S.pending,st.evR).ended) return;
+  S.pending.push(code); S.mod='S'; keepAwake(); render();
+}
+function commit(g, turn){
+  const g2=clone(g); g2.turns=(g2.turns||[]); g2.turns.push(turn); ensureThrows(g2);
+  const st2=replay(g2);
+  if(st2.done){ g2.status='done'; g2.winner=st2.winner; g2.ended=Date.now(); S.resultId=g2.id; }
+  S.pending=[]; S.rolled=null; S.trade=false; S.mod='S';
+  Store.put('games',g2.id,g2); render(); window.scrollTo(0,0);
+}
+function saveSettings(ch){ Store.put('config','settings',Object.assign({},cfg(),ch)); render(); }
+
+const A={
+  nav(v){ S.view=v; S.askDel=null; try{ history.replaceState(null,'','#'+v); }catch(e){ location.hash=v; } render(); window.scrollTo(0,0); },
+  toggle(id){ const i=S.lineup.indexOf(id); if(i>=0) S.lineup.splice(i,1); else S.lineup.push(id); render(); },
+  up(id){ const i=S.lineup.indexOf(id); if(i>0){ [S.lineup[i-1],S.lineup[i]]=[S.lineup[i],S.lineup[i-1]]; render(); } },
+  start(){ if(S.lineup.length && !activeGame()) newGame(S.lineup); render(); },
+  mod(v){ S.mod = S.mod===v && v!=='S' ? 'S' : v; render(); },
+  key(v){ addDart(S.mod+v); },
+  bull(){ if(S.mod!=='T') addDart(S.mod==='D'?'D25':'S25'); },
+  miss(){ addDart('M'); },
+  dart(code){ addDart(code); },
+  giveFrom(id){ S.giveFrom = S.giveFrom===id ? null : id; render(); },
+  give(v){ const [a,b]=v.split(':'); S.giveFrom=null; bankEvent({ev:'give', p:a, to:b}); },
+  deposit(id){ bankEvent({ev:'deposit', p:id}, true); },
+  withdraw(id){ if((vaultBalance()[id]||0)>0) bankEvent({ev:'withdraw', p:id}); },
+  entry(v){ S.entry=v; S.mod='S'; try{ localStorage.setItem('timmy-entry',v); }catch(e){} render(); },
+  roll(){
+    const g=activeGame(); if(!g || S.readOnly || S.rolled) return;
+    const st=replay(g), p=st.P[st.queue[0]]; if(!p || !st.R.timmy || !st.R.roll || st.r!==st.stell) return;
+    const e=evalTurn(p.rem,S.pending,st.evR); if(!e.ended || e.out) return;
+    S.rolled=S.pending.slice(); S.pending=rollDarts(); S.mod='S'; render();
+  },
+  undo(){
+    const g=activeGame(); if(!g || S.readOnly || S.rolled) return;   // a random result is final
+    if(S.pending.length){ S.pending.pop(); S.mod='S'; S.trade=false; render(); return; }
+    if(!(g.turns||[]).length) return;
+    if(g.turns[g.turns.length-1].ev){ const g3=clone(g); g3.turns.pop(); Store.put('games',g3.id,g3); render(); return; }   // undo a give / vault move
+    const g2=clone(g), last=g2.turns.pop(); S.pending=last.d.slice(); S.rolled=last.o?last.o.slice():null; S.trade=last.trade===true?'own':(last.trade||false); Store.put('games',g2.id,g2); render();
+  },
+  trade(v){ S.trade = S.trade===v ? false : (v||'own'); render(); },
+  confirm(){
+    const g=activeGame(); if(!g || S.readOnly) return;
+    const st=replay(g), cur=st.queue[0], e=evalTurn(st.P[cur].rem,S.pending,st.evR);
+    if(!e.ended) return;
+    const turn={p:cur,d:S.pending.slice()}; if(S.rolled) turn.o=S.rolled.slice(); if(S.trade && S.canTradeNow) turn.trade=S.trade;
+    commit(g,turn);
+  },
+  skip(){
+    const g=activeGame(); if(!g || S.readOnly || S.pending.length) return;
+    const st=replay(g); if(!st.R.skip || !st.queue.length) return;
+    commit(g,{p:st.queue[0],d:[],skip:true});
+  },
+  askEnd(){ S.askEnd=true; render(); },
+  noEnd(){ S.askEnd=false; render(); },
+  yesEnd(){ const g=activeGame(); if(g){ const g2=clone(g); g2.status='abandoned'; Store.put('games',g2.id,g2); } S.askEnd=false; S.pending=[]; S.rolled=null; render(); },
+  log(){ S.showLog=!S.showLog; render(); },
+  rematch(){ const g=S.games[S.resultId]; if(g && !activeGame()){ newGame(g.players.filter(id=>S.players[id])); } render(); },
+  lobby(){ const g=S.games[S.resultId]; if(g) S.lineup=g.players.filter(id=>S.players[id]&&!S.players[id].archived); S.resultId=null; render(); },
+  reopen(){
+    const g=S.games[S.resultId]; if(!g || activeGame()) return;
+    const g2=clone(g); while(g2.turns.length && g2.turns[g2.turns.length-1].ev) g2.turns.pop();
+    const last=g2.turns.pop(); g2.status='active'; g2.winner=null; delete g2.ended;
+    S.pending=last?last.d.slice():[]; S.rolled=last&&last.o?last.o.slice():null; S.resultId=null; Store.put('games',g2.id,g2); render();
+  },
+  askDel(id){ S.askDel=id; render(); },
+  noDel(){ S.askDel=null; render(); },
+  yesDel(id){ Store.remove('games',id); S.askDel=null; render(); },
+  archive(id){ const p=S.players[id]; if(p){ Store.put('players',id,{...p,archived:true}); S.lineup=S.lineup.filter(x=>x!==id); render(); } },
+  restore(id){ const p=S.players[id]; if(p){ const q={...p}; delete q.archived; Store.put('players',id,q); render(); } },
+  base(v){ saveSettings({base:Math.min(200,Math.max(1,cfg().base+(+v)))}); },
+  offset(v){ saveSettings({offset:cfg().offset+(+v)}); },
+  startScore(v){ saveSettings({start:+v}); },
+  climb(){ saveSettings({climb:!cfg().climb}); },
+  dayRule(){ saveSettings({dayRule:!cfg().dayRule}); },
+  range(v){ S.range={...S.range,k:v}; if(v==='custom' && !S.range.from) S.range.from=dayOffset(29); saveRange(); S.hmSel=null; render(); },
+  statPlayer(id){ S.statPlayer=id; S.hmSel=null; render(); },
+  hm(code){ S.hmSel = S.hmSel===code ? null : code; render(); },
+  exportPlayer(){ const id=S.statPlayer; if(id) saveFile(exportName(nm(id)), buildCSV(statsGames(), id)); },
+  exportAll(){ saveFile(exportName('all-players'), buildCSV(statsGames())); },
+  tips(){ saveSettings({tips:!cfg().tips}); },
+  hcMode(v){ saveSettings({hcMode:v}); },
+  hc(v){ const [id,d]=v.split(':'); const hc={...(cfg().hc||{})}; hc[id]=Math.min(150,Math.max(0,(hc[id]||0)+(+d))); saveSettings({hc}); },
+  month(v){ if(v){ S.month=v; render(); } },
+  backup(){ const o={app:'timmy-darts', version:1, exported:new Date().toISOString(), players:S.players, games:S.games, settings:S.settings};
+    saveFile(`timmy-darts-backup_${today()}.json`, JSON.stringify(o,null,1)); },
+  cancelImport(){ S.imp=null; render(); },
+  doImport(v){ const imp=S.imp; if(!imp || S.readOnly) return;
+    const items=[]; imp.players.forEach(([id,pl])=>{ if(!S.players[id]) items.push(['players',id,pl]); });
+    imp.games.forEach(g=>{ if(!S.games[g.id]) items.push(['games',g.id,g]); });
+    if(v==='settings' && imp.settings) Store.put('config','settings',imp.settings);
+    Store.putMany(items); toast(`Added ${imp.newG} games and ${imp.newP} players.`); S.imp=null; render(); },
+  rule(k){ const R={...cfg().rules}; R[k]=!R[k]; if(R[k] && k==='freaky') R.madness=false; if(R[k] && k==='madness') R.freaky=false; saveSettings({rules:R}); },
+  preset(v){
+    const R={...cfg().rules};
+    if(v==='vanilla') R.timmy=false;
+    else RULE_DEFS.forEach(d=>{ if(d.k!=='freaky' && d.k!=='madness') R[d.k]=true; });   // Freaky Friday and Super Madness stay as they are
+    saveSettings({rules:R});
+  }
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b || b.disabled) return;
+  const f=A[b.dataset.act]; if(f) f(b.dataset.v);
+});
+document.addEventListener('input',e=>{ if(e.target.id==='newName') S.newName=e.target.value; });
+document.addEventListener('change',e=>{
+  if(e.target.id==='importFile'){ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
+    const rd=new FileReader(); rd.onload=()=>{ try{ prepareImport(JSON.parse(rd.result)); }catch(err){ toast("That file isn't a Timmy Darts backup."); } }; rd.readAsText(f); return; }
+  if(e.target.id==='statFrom'||e.target.id==='statTo'){ S.range={...S.range,[e.target.id==='statFrom'?'from':'to']:e.target.value}; saveRange(); render(); }
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='addForm') return;
+  e.preventDefault();
+  const name=(S.newName||'').trim().slice(0,24); if(!name || S.readOnly) return;
+  const same=Object.entries(S.players).find(([,p])=>p.name.toLowerCase()===name.toLowerCase());
+  if(same){
+    if(same[1].archived){ A.restore(same[0]); }
+    if(!S.lineup.includes(same[0])) S.lineup.push(same[0]);
+    S.newName=''; render(); return;
+  }
+  const id=uid(); Store.put('players',id,{name,created:Date.now()}); S.lineup.push(id); S.newName=''; render();
+});
+loadRange();
+function route(){ const h=(location.hash||'').slice(1); S.view=['stats','ranking','rules'].includes(h)?h:'play'; render(); }
+window.addEventListener('hashchange',route);
+route();
+Store.init();
+</script>
+
+</body>
+</html>
