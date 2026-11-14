@@ -354,6 +354,37 @@ label.btn.disabled{opacity:.38;pointer-events:none}
 .devtip span{display:flex;align-items:center;gap:7px}
 .devtable summary{cursor:pointer;color:var(--muted);font-weight:600}
 .devtable .tablewrap{margin-top:8px}
+.fx{position:fixed;inset:0;z-index:40;display:grid;place-items:center;overflow:hidden;cursor:pointer;
+  --fx-a:var(--sisal);--fx-b:#5d4a1a;--fx-ink:#fff7dc;background:#07090880;animation:fx-in .18s ease-out both}
+.fx.green{--fx-a:var(--green);--fx-b:#103b22;--fx-ink:#eafff1}
+.fx.red{--fx-a:var(--red);--fx-b:#3d120e;--fx-ink:#fff0ee}
+.fx.timmy{--fx-a:var(--sisal);--fx-b:#3a3220;--fx-ink:var(--sisal-ink)}
+.fx.blue{--fx-a:var(--s1);--fx-b:#0f2848;--fx-ink:#eef5ff}
+.fx.sad{--fx-a:#56605a;--fx-b:#1c221f;--fx-ink:#cfd6d1}
+.fx-rays{position:absolute;width:220vmax;height:220vmax;left:50%;top:50%;margin:-110vmax 0 0 -110vmax;
+  background:repeating-conic-gradient(from 0deg,var(--fx-a) 0deg 9deg,var(--fx-b) 9deg 18deg);opacity:.55;animation:fx-spin 9s linear infinite}
+.fx.sad .fx-rays,.fx.red .fx-rays{animation-duration:30s;opacity:.35}
+.fx-bulbs{position:absolute;inset:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  border-radius:22px;border:14px solid transparent;
+  background:radial-gradient(circle,var(--fx-ink) 0 3px,transparent 4px) 0 0/28px 28px border-box,radial-gradient(circle,var(--fx-a) 0 3px,transparent 4px) 14px 14px/28px 28px border-box;
+  -webkit-mask:linear-gradient(#000 0 0) border-box,linear-gradient(#000 0 0) padding-box;-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:fx-blink .35s steps(1) infinite}
+.fx-confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fx-card{position:relative;text-align:center;padding:0 max(16px,env(safe-area-inset-left,0px));display:grid;gap:12px;justify-items:center;transform:skew(-7deg)}
+.fx-title{font-family:var(--display);font-weight:900;text-transform:uppercase;line-height:.92;font-size:clamp(52px,11vw,150px);color:var(--fx-ink);
+  letter-spacing:.01em;text-wrap:balance;max-width:min(92vw,1100px);
+  text-shadow:0 4px 0 var(--fx-b),0 8px 0 var(--fx-b),0 12px 0 #0009,0 0 40px var(--fx-a)}
+.fx-title span{display:inline-block;animation:fx-drop .55s cubic-bezier(.2,1.6,.4,1) both}
+.fx.sad .fx-title span,.fx.red .fx-title span{animation:fx-sag .9s ease-in both}
+.fx-sub{font-family:var(--display);font-weight:800;font-size:clamp(20px,3.4vw,40px);color:var(--fx-ink);background:var(--fx-b);border:3px solid var(--fx-a);
+  border-radius:12px;padding:4px 18px;animation:fx-pop .4s .35s cubic-bezier(.2,1.6,.4,1) both;max-width:90vw}
+@keyframes fx-in{from{opacity:0}to{opacity:1}}
+@keyframes fx-spin{to{transform:rotate(360deg)}}
+@keyframes fx-blink{50%{background-position:14px 14px,0 0}}
+@keyframes fx-drop{0%{transform:translateY(-120vh) rotate(-12deg)}70%{transform:translateY(8px) rotate(2deg)}100%{transform:none}}
+@keyframes fx-sag{0%{transform:translateY(-40px);opacity:0}30%{transform:none;opacity:1}100%{transform:translateY(10px) rotate(4deg)}}
+@keyframes fx-pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.fx-rays,.fx-bulbs,.fx-title span,.fx-sub{animation:none!important}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;max-width:min(520px,calc(100% - 32px));z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -382,6 +413,7 @@ body{margin:0}
   <main id="view"><div class="loading"><p>Loading your games…</p></div></main>
 </div>
 <div id="toast" class="toast" hidden></div>
+<div id="fx" class="fx" hidden data-act="fxClose" role="status"></div>
 
 <script>
 /* ENGINE START */
@@ -649,7 +681,7 @@ const fmtPct=x=>{ const v=x*100; return (v>=10?v.toFixed(0):v>=1?v.toFixed(1):v>
 
 const S={mode:'loading', players:{}, games:{}, settings:{}, loaded:{players:false,games:false,config:false},
   view:'play', lineup:[], mod:'S', pending:[], rolled:null, trade:false, giveFrom:null, devMetric:'avg', devBy:'day', devHidden:{}, devModel:null, canTradeNow:false, range:{k:'all',from:'',to:''}, statPlayer:null, hmSel:null, month:null, entry:(()=>{ try{ return localStorage.getItem('timmy-entry')||'board'; }catch(e){ return 'board'; } })(), imp:null, resultId:null, askEnd:false, askDel:null, showLog:false, stale:false, readOnly:false, newName:''};
-const cfg=()=>{ const st=S.settings||{}; return Object.assign({base:26,offset:0,start:301,dayRule:true,climb:true,tips:true,hcMode:'off',hc:{}}, st, {rules:Object.assign({},DEFAULT_RULES,st.rules||{})}); };
+const cfg=()=>{ const st=S.settings||{}; return Object.assign({base:26,offset:0,start:301,dayRule:true,climb:true,tips:true,fx:true,hcMode:'off',hc:{}}, st, {rules:Object.assign({},DEFAULT_RULES,st.rules||{})}); };
 const allLoaded=()=>S.loaded.players && S.loaded.games && S.loaded.config;
 const nm=id=> id==='timmy' ? 'Timmy' : (S.players[id]?.name || 'Former player');
 
@@ -1702,6 +1734,8 @@ function sidePanels(){
   return `
       <section class="panel">
         <h2>Helpers</h2>
+        <div class="setting"><span>Celebrations<br><span class="note">Bowling-alley moments for game shots, 180s, 26s, busts and the big rounds. Tap to skip one.</span></span>
+          <span class="stepper"><button class="btn small ghost" data-act="fxTry">Show one</button>${sw('fx',c.fx,'Celebrations')}</span></div>
         <div class="setting"><span>Enter darts with</span>
           <span class="seg">${[['board','Dartboard'],['keys','Keypad']].map(([v,l])=>`<button data-act="entry" data-v="${v}" aria-pressed="${(S.entry||'board')===v}">${l}</button>`).join('')}</span></div>
         <div class="setting"><span>Checkout and 26 tips on the dart pad<br><span class="note">Shows a checkout route like T20 · T11 · D14, or a set-up dart when no checkout is on. When you need a 26, it also shows how to get one, clean or by subtraction.</span></span>${sw('tips',c.tips,'Checkout and 26 tips')}</div>
@@ -1783,12 +1817,92 @@ function addDart(code){
   if(evalTurn(p.rem,S.pending,st.evR).ended) return;
   S.pending.push(code); S.mod='S'; keepAwake(); render();
 }
+/* ---------- celebrations: bowling-alley style moments ---------- */
+// mood: gold (big win), green (26s), red (bust), timmy (Timmy wins), blue (round banners), sad (misses)
+const FX_SAMPLES=[
+  {title:'Game shot!', sub:'Anna checks out 81', mood:'gold', confetti:true, ms:3200},
+  {title:'One hundred and eighty!', sub:'T20 · T20 · T20', mood:'gold', confetti:true},
+  {title:'Bed & breakfast!', sub:'20 · 5 · 1 — clean 26', mood:'green', confetti:true},
+  {title:'Bust!', sub:'Back to 32', mood:'red'},
+  {title:'Madhouse!', sub:'Won on D1', mood:'gold', confetti:true, ms:3200},
+  {title:'Stellrunde', sub:'Everyone throws', mood:'blue'},
+];
+function turnMoment(before, after, turn){
+  if(turn.skip || turn.ev) return [];
+  const R=after.R, p=before.P[turn.p], who=nm(turn.p), out=[];
+  const e=evalTurn(p.rem, turn.d, after.evR), d=turn.d, sum=dsum(d);
+  const fin=d[d.length-1], tr=after.rounds.flatMap(r=>r.turns).filter(t=>t.p===turn.p).slice(-1)[0]||{};
+  if(after.done && after.winner===turn.p){
+    if(fin==='D1') out.push({title:'Madhouse!', sub:`${who} wins on D1`, mood:'gold', confetti:true, ms:3200});
+    else if(e.score===170) out.push({title:'Big fish!', sub:`${who} checks out 170`, mood:'gold', confetti:true, ms:3400});
+    else if(fin==='D25') out.push({title:'Bullseye finish!', sub:`${who} checks out ${e.score}`, mood:'gold', confetti:true, ms:3200});
+    else if(e.score>=100) out.push({title:'High finish!', sub:`${who} checks out ${e.score}`, mood:'gold', confetti:true, ms:3200});
+    else out.push({title:'Game shot!', sub:`${who} checks out ${e.score} on ${fin}`, mood:'gold', confetti:true, ms:3000});
+    return out;
+  }
+  if(tr.trade) return [];
+  if(e.bust) out.push({title:'Bust!', sub:`${who} stays on ${p.rem}`, mood:'red'});
+  else if(sum===180) out.push({title:'One hundred and eighty!', sub:who, mood:'gold', confetti:true, ms:3000});
+  else if(e.sub && R.timmy && R.c26) out.push({title:'Subtraction!', sub:`${dv(d[0])+dv(d[1])} − ${dv(d[2])} = 26`, mood:'green', confetti:true});
+  else if(e.clean26 && R.timmy && R.c26){
+    const bnb=[...d].sort().join()===['S1','S20','S5'].sort().join();
+    out.push({title:bnb?'Bed & breakfast!':'Clean 26!', sub:bnb?`${who}: 20 · 5 · 1`:`${who}: ${d.map(dartText).join(' · ')}`, mood:'green', confetti:true});
+  }
+  else if(d.length===3 && d.every(c=>c!=='M' && !c.endsWith('25')) && new Set(d.map(c=>c.slice(1))).size===1 && new Set(d.map(c=>c[0])).size===3)
+    out.push({title:'Shanghai!', sub:`${who}: ${d.map(dartText).join(' · ')}`, mood:'gold', confetti:true});
+  else if(d.length===3 && d[0]!=='M' && d.every(c=>c===d[0]))
+    out.push({title:'Three in a bed!', sub:`${who}: ${d.map(dartText).join(' · ')}`, mood:'gold', confetti:true});
+  else if(e.score>=100) out.push({title:e.score>=140?`Ton ${e.score-100}!`:'Ton!', sub:`${who} scores ${e.score}`, mood:'gold', confetti:e.score>=140});
+  else if(d.length===3 && d.every(c=>c==='M')) out.push({title:'Triple miss', sub:`${who} hits nothing`, mood:'sad'});
+  return out;
+}
+function roundMoment(before, after){
+  if(after.done) return after.winner==='timmy' ? [{title:`${timmyName(after)} wins!`, sub:'Better luck next game', mood:'timmy', ms:3000}] : [];
+  if(!after.R.timmy || after.r===before.r) return [];
+  if(after.r>after.L) return [{title:'Overtime!', sub:'Only 26s and checkouts now', mood:'blue'}];
+  if(after.r===after.L) return [{title:'Last round', sub:`${timmyName(after)} is through`, mood:'blue'}];
+  if(after.r===after.stell && after.stell>2) return [{title:'Stellrunde', sub:after.R.stell&&after.R.sitOut?'Everyone throws':'Second to last round', mood:'blue'}];
+  return [];
+}
+let fxQueue=[], fxTimer=null, fxRaf=null;
+function celebrate(list){
+  if(!cfg().fx || !list || !list.length) return;
+  fxQueue.push(...list); if(!fxTimer) fxNext();
+}
+function fxNext(){
+  const host=document.getElementById('fx'); cancelAnimationFrame(fxRaf);
+  const m=fxQueue.shift();
+  if(!m){ host.hidden=true; host.innerHTML=''; fxTimer=null; return; }
+  const letters=[...m.title].map((ch,i)=>`<span style="animation-delay:${(i*0.035).toFixed(3)}s">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('');
+  host.className='fx '+m.mood; host.hidden=false;
+  host.innerHTML=`<div class="fx-rays"></div><div class="fx-bulbs"></div>${m.confetti?'<canvas class="fx-confetti"></canvas>':''}
+    <div class="fx-card"><div class="fx-title" aria-live="assertive">${letters}</div>${m.sub?`<div class="fx-sub">${esc(m.sub)}</div>`:''}</div>`;
+  if(m.confetti && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) fxConfetti(host.querySelector('canvas'));
+  fxTimer=setTimeout(fxNext, m.ms||2200);
+}
+function fxDismiss(){ clearTimeout(fxTimer); fxNext(); }
+function fxConfetti(cv){
+  const ctx=cv.getContext('2d'), dpr=window.devicePixelRatio||1, W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.scale(dpr,dpr);
+  const cs=getComputedStyle(document.documentElement), cols=['--sisal','--red','--green','--amber','--s1','--fg'].map(v=>cs.getPropertyValue(v).trim()||'#fff');
+  const ps=Array.from({length:140},()=>({x:W/2+(Math.random()-.5)*W*.3, y:H*.42, vx:(Math.random()-.5)*16, vy:-Math.random()*15-5,
+    w:6+Math.random()*7, h:4+Math.random()*5, r:Math.random()*6, vr:(Math.random()-.5)*.4, c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  const step=t=>{ const k=(t-t0)/1000; ctx.clearRect(0,0,W,H);
+    ps.forEach(p=>{ p.vy+=0.45; p.vx*=0.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.globalAlpha=Math.max(0,1-k/3); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    if(k<3) fxRaf=requestAnimationFrame(step); };
+  fxRaf=requestAnimationFrame(step);
+}
+
 function commit(g, turn){
+  const st1=replay(g);
   const g2=clone(g); g2.turns=(g2.turns||[]); g2.turns.push(turn); ensureThrows(g2);
   const st2=replay(g2);
   if(st2.done){ g2.status='done'; g2.winner=st2.winner; g2.ended=Date.now(); S.resultId=g2.id; }
   S.pending=[]; S.rolled=null; S.trade=false; S.mod='S';
   Store.put('games',g2.id,g2); render(); window.scrollTo(0,0);
+  try{ celebrate([...turnMoment(st1,st2,turn), ...roundMoment(st1,st2)]); }catch(err){}
 }
 function saveSettings(ch){ Store.put('config','settings',Object.assign({},cfg(),ch)); render(); }
 
@@ -1864,6 +1978,9 @@ const A={
   exportPlayer(){ const id=S.statPlayer; if(id) saveFile(exportName(nm(id)), buildCSV(statsGames(), id)); },
   exportAll(){ saveFile(exportName('all-players'), buildCSV(statsGames())); },
   tips(){ saveSettings({tips:!cfg().tips}); },
+  fx(){ saveSettings({fx:!cfg().fx}); },
+  fxTry(){ const m=FX_SAMPLES[(S.fxDemo=((S.fxDemo||0)+1))%FX_SAMPLES.length]; fxQueue.push(m); if(!fxTimer) fxNext(); },
+  fxClose(){ fxDismiss(); },
   hcMode(v){ saveSettings({hcMode:v}); },
   hc(v){ const [id,d]=v.split(':'); const hc={...(cfg().hc||{})}; hc[id]=Math.min(150,Math.max(0,(hc[id]||0)+(+d))); saveSettings({hc}); },
   month(v){ if(v){ S.month=v; render(); } },
