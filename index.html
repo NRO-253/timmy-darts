@@ -32,6 +32,8 @@
   --b-red:#cf3b30;
   --b-green:#2e8f56;
   --b-wire:#7d877f;
+  /* chart series (validated for colour-blind separation on the dark panel) */
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
   --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
   --body:'Barlow','Segoe UI',system-ui,sans-serif;
   color-scheme:dark;
@@ -327,6 +329,31 @@ label.btn.disabled{opacity:.38;pointer-events:none}
 .bank .who{font-weight:700;min-width:0;overflow-wrap:anywhere}
 .bank .acts{display:flex;flex-wrap:wrap;gap:6px}
 .bank .give-to{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.devctl{display:flex;flex-wrap:wrap;gap:8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.leg{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border-radius:18px;background:var(--panel-2);border:1px solid var(--line);font-weight:600;font-size:14px}
+.leg.off{opacity:.45}
+.leg.off .sw{background:transparent!important;border:2px solid var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
+.sw.s1{background:var(--s1)} .sw.s2{background:var(--s2)} .sw.s3{background:var(--s3)} .sw.s4{background:var(--s4)}
+.sw.s5{background:var(--s5)} .sw.s6{background:var(--s6)} .sw.s7{background:var(--s7)} .sw.s8{background:var(--s8)}
+.devchart{position:relative;max-width:100%;overflow:hidden}
+.devchart svg{display:block;max-width:100%;height:auto;touch-action:pan-y}
+.devchart .grid{stroke:var(--line);stroke-width:1}
+.devchart .axis{stroke:var(--muted);stroke-width:1}
+.devchart .ytick{fill:var(--muted);font-size:12px;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.devchart .xtick{fill:var(--muted);font-size:12px;text-anchor:middle;font-variant-numeric:tabular-nums}
+.devchart .dline{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.devchart .dpt{stroke:var(--panel);stroke-width:2}
+.devchart .dlabel{fill:var(--fg);font-size:13px;font-weight:600;dominant-baseline:central}
+.devchart .xhair{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.devchart .hit{fill:transparent;cursor:crosshair}
+.dline.s1{stroke:var(--s1)} .dline.s2{stroke:var(--s2)} .dline.s3{stroke:var(--s3)} .dline.s4{stroke:var(--s4)} .dline.s5{stroke:var(--s5)} .dline.s6{stroke:var(--s6)} .dline.s7{stroke:var(--s7)} .dline.s8{stroke:var(--s8)}
+.dpt.s1{fill:var(--s1)} .dpt.s2{fill:var(--s2)} .dpt.s3{fill:var(--s3)} .dpt.s4{fill:var(--s4)} .dpt.s5{fill:var(--s5)} .dpt.s6{fill:var(--s6)} .dpt.s7{fill:var(--s7)} .dpt.s8{fill:var(--s8)}
+.devtip{position:absolute;top:8px;z-index:2;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;font-size:14px;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.35);white-space:nowrap}
+.devtip span{display:flex;align-items:center;gap:7px}
+.devtable summary{cursor:pointer;color:var(--muted);font-weight:600}
+.devtable .tablewrap{margin-top:8px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;max-width:min(520px,calc(100% - 32px));z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -621,7 +648,7 @@ const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
 const fmtPct=x=>{ const v=x*100; return (v>=10?v.toFixed(0):v>=1?v.toFixed(1):v>=0.1?v.toFixed(2):v.toPrecision(1)).replace('.',',')+' %'; };
 
 const S={mode:'loading', players:{}, games:{}, settings:{}, loaded:{players:false,games:false,config:false},
-  view:'play', lineup:[], mod:'S', pending:[], rolled:null, trade:false, giveFrom:null, canTradeNow:false, range:{k:'all',from:'',to:''}, statPlayer:null, hmSel:null, month:null, entry:(()=>{ try{ return localStorage.getItem('timmy-entry')||'board'; }catch(e){ return 'board'; } })(), imp:null, resultId:null, askEnd:false, askDel:null, showLog:false, stale:false, readOnly:false, newName:''};
+  view:'play', lineup:[], mod:'S', pending:[], rolled:null, trade:false, giveFrom:null, devMetric:'avg', devBy:'day', devHidden:{}, devModel:null, canTradeNow:false, range:{k:'all',from:'',to:''}, statPlayer:null, hmSel:null, month:null, entry:(()=>{ try{ return localStorage.getItem('timmy-entry')||'board'; }catch(e){ return 'board'; } })(), imp:null, resultId:null, askEnd:false, askDel:null, showLog:false, stale:false, readOnly:false, newName:''};
 const cfg=()=>{ const st=S.settings||{}; return Object.assign({base:26,offset:0,start:301,dayRule:true,climb:true,tips:true,hcMode:'off',hc:{}}, st, {rules:Object.assign({},DEFAULT_RULES,st.rules||{})}); };
 const allLoaded=()=>S.loaded.players && S.loaded.games && S.loaded.config;
 const nm=id=> id==='timmy' ? 'Timmy' : (S.players[id]?.name || 'Former player');
@@ -1240,6 +1267,107 @@ function playerPanel(games, ids){
   </section>`;
 }
 
+/* ---------- stats: development over time ---------- */
+// Player colours follow the player (order they were added), never their rank.
+function playerSlot(id){
+  const all=Object.entries(S.players).sort((a,b)=>(a[1].created||0)-(b[1].created||0)).map(([k])=>k);
+  return (Math.max(0,all.indexOf(id))%8)+1;
+}
+const fmtShortDay=d=>new Date(d+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+function devData(games, ids){
+  const by=S.devBy, metric=S.devMetric, keys=[], agg={};
+  games.slice().sort((a,b)=>a.created-b.created).forEach(g=>{
+    const key = by==='day' ? g.day : g.id;
+    if(!agg[key]){ agg[key]={};
+      keys.push({key, label: by==='day' ? fmtShortDay(g.day) : fmtShortDay(g.day)+' '+new Date(g.created).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}); }
+    const st=replay(g);
+    g.players.forEach(id=>{ if(!ids.includes(id)) return;
+      const a=st.P[id].a, x=agg[key][id]||(agg[key][id]={p:0,d:0,t:0,c:0}); x.p+=a.points; x.d+=a.darts; x.t+=a.turns; x.c+=a.c26; });
+  });
+  const val=x=> metric==='avg' ? (x.d ? x.p/x.d*3 : null) : (x.t ? x.c/x.t*100 : null);
+  const series=ids.map(id=>({id, slot:playerSlot(id),
+    pts:keys.map((k,i)=>{ const x=agg[k.key][id], v=x?val(x):null; return v==null?null:{i, v, n:metric==='avg'?x.d:x.t}; }).filter(Boolean)}))
+    .filter(s=>s.pts.length);
+  return {keys, series, metric};
+}
+const fmtVal=(v,metric)=> metric==='avg' ? v.toFixed(1).replace('.',',') : Math.round(v)+' %';
+function niceStep(raw){ const p=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/p; return (f<=1?1:f<=2?2:f<=5?5:10)*p; }
+function devChart(m){
+  const vis=m.series.filter(s=>!S.devHidden[s.id]);
+  const W=Math.max(300, Math.min(window.innerWidth||1000, 1280)-32-36), H=280;
+  const labelled=vis.length && vis.length<=4;
+  const ml=46, mr=labelled?96:18, mt=14, mb=36, iw=W-ml-mr, ih=H-mt-mb;
+  const n=m.keys.length, xs=m.keys.map((k,i)=> n===1 ? ml+iw/2 : ml+i*iw/(n-1));
+  const all=vis.flatMap(s=>s.pts.map(p=>p.v));
+  let lo, hi;
+  if(m.metric==='avg'){ lo=all.length?Math.max(0,Math.floor((Math.min(...all)-3)/5)*5):0; hi=all.length?Math.ceil((Math.max(...all)+3)/5)*5:60; }
+  else { lo=0; hi=Math.max(10, all.length?Math.ceil((Math.max(...all)+2)/5)*5:10); }
+  if(hi-lo<10) hi=lo+10;
+  const step=niceStep((hi-lo)/4), ticks=[]; for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) ticks.push(v);
+  const y=v=> mt+ih-(v-lo)/(hi-lo)*ih;
+  const every=Math.max(1, Math.ceil(n/Math.max(2, Math.floor(iw/64))));
+  const grid=ticks.map(v=>`<line class="grid" x1="${ml}" x2="${ml+iw}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="ytick" x="${ml-8}" y="${y(v).toFixed(1)}">${m.metric==='avg'?v:v+' %'}</text>`).join('');
+  const showX=i=> i===n-1 || (i%every===0 && n-1-i>=every*0.6);   // keep the last label, drop one that would crowd it
+  const xl=m.keys.map((k,i)=> showX(i) ? `<text class="xtick" x="${xs[i].toFixed(1)}" y="${mt+ih+20}">${esc(k.label)}</text>` : '').join('');
+  const lines=vis.map(s=>{
+    const d=s.pts.map((p,j)=>`${j?'L':'M'}${xs[p.i].toFixed(1)} ${y(p.v).toFixed(1)}`).join('');
+    return `<path class="dline s${s.slot}" d="${d}"/>` + s.pts.map(p=>`<circle class="dpt s${s.slot}" cx="${xs[p.i].toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="4"/>`).join('');
+  }).join('');
+  let ends='';
+  if(labelled){
+    const lab=vis.map(s=>{ const p=s.pts[s.pts.length-1]; return {s, x:xs[p.i], y:y(p.v)}; }).sort((a,b)=>a.y-b.y);
+    for(let i=1;i<lab.length;i++) if(lab[i].y-lab[i-1].y<15) lab[i].y=lab[i-1].y+15;
+    ends=lab.map(l=>`<text class="dlabel" x="${(l.x+9).toFixed(1)}" y="${l.y.toFixed(1)}">${esc(nm(l.s.id))}</text>`).join('');
+  }
+  S.devModel={xs, W, keys:m.keys, metric:m.metric, series:vis, y, mt, ih};
+  return `<div class="devchart" data-dev="1">
+    <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${m.metric==='avg'?'3-dart average':'Share of turns ending on a 26'} over time, one line per player">
+      ${grid}<line class="axis" x1="${ml}" x2="${ml+iw}" y1="${mt+ih}" y2="${mt+ih}"/>${xl}
+      <line class="xhair" x1="0" x2="0" y1="${mt}" y2="${mt+ih}" visibility="hidden"/>
+      ${lines}${ends}
+      <rect class="hit" x="${ml-12}" y="${mt}" width="${iw+24}" height="${ih}"/>
+    </svg>
+    <div class="devtip" hidden></div>
+  </div>`;
+}
+function devTipAt(clientX){
+  const box=document.querySelector('.devchart'), m=S.devModel; if(!box || !m || !m.keys.length) return;
+  const svg=box.querySelector('svg'), r=svg.getBoundingClientRect(), sx=(clientX-r.left)*m.W/r.width;
+  let i=0, best=Infinity; m.xs.forEach((x,j)=>{ const dd=Math.abs(x-sx); if(dd<best){ best=dd; i=j; } });
+  const rows=m.series.map(s=>({s, p:s.pts.find(p=>p.i===i)})).filter(o=>o.p).sort((a,b)=>b.p.v-a.p.v);
+  const xh=svg.querySelector('.xhair'); xh.setAttribute('x1',m.xs[i]); xh.setAttribute('x2',m.xs[i]); xh.setAttribute('visibility','visible');
+  const tip=box.querySelector('.devtip');
+  tip.innerHTML=`<b>${esc(m.keys[i].label)}</b>`+(rows.length?rows.map(o=>`<span><i class="sw s${o.s.slot}"></i>${esc(nm(o.s.id))} <b>${fmtVal(o.p.v,m.metric)}</b> <span class="note">${o.p.n} ${m.metric==='avg'?'darts':'turns'}</span></span>`).join(''):'<span class="note">Nobody played</span>');
+  tip.hidden=false;
+  const px=m.xs[i]*r.width/m.W, tw=tip.offsetWidth;
+  tip.style.left=Math.max(0, Math.min(r.width-tw, px+(px+14+tw>r.width ? -tw-14 : 14)))+'px';
+}
+function devTipHide(){ const box=document.querySelector('.devchart'); if(!box) return;
+  box.querySelector('.devtip').hidden=true; const xh=box.querySelector('.xhair'); if(xh) xh.setAttribute('visibility','hidden'); }
+function devPanel(games, ids){
+  if(!ids.length) return '';
+  const m=devData(games, ids);
+  const legend=m.series.map(s=>{ const last=s.pts[s.pts.length-1], off=!!S.devHidden[s.id];
+    return `<button class="leg${off?' off':''}" data-act="devToggle" data-v="${s.id}" aria-pressed="${!off}"><i class="sw s${s.slot}"></i>${esc(nm(s.id))} <span class="note">${fmtVal(last.v,m.metric)}</span></button>`; }).join('');
+  const tbl=`<details class="devtable"><summary>Show as table</summary><div class="tablewrap flat"><table>
+    <thead><tr><th>${S.devBy==='day'?'Day':'Game'}</th>${m.series.map(s=>`<th>${esc(nm(s.id))}</th>`).join('')}</tr></thead>
+    <tbody>${m.keys.map((k,i)=>`<tr><td>${esc(k.label)}</td>${m.series.map(s=>{ const p=s.pts.find(p=>p.i===i); return `<td>${p?fmtVal(p.v,m.metric):'–'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></details>`;
+  return `<section class="panel">
+    <div class="pp-head">
+      <h2>Development over time</h2>
+      <div class="devctl">
+        <span class="seg" role="group" aria-label="Measure">${[['avg','3-dart average'],['r26','26 rate']].map(([v,l])=>`<button data-act="devMetric" data-v="${v}" aria-pressed="${S.devMetric===v}">${l}</button>`).join('')}</span>
+        <span class="seg" role="group" aria-label="One point per">${[['day','By day'],['game','By game']].map(([v,l])=>`<button data-act="devBy" data-v="${v}" aria-pressed="${S.devBy===v}">${l}</button>`).join('')}</span>
+      </div>
+    </div>
+    ${m.keys.length<2?'<p class="note">The lines appear once there are games on at least two '+(S.devBy==='day'?'days. Switch to "By game" to see single games.':'occasions.')+'</p>':''}
+    <div class="legend">${legend}</div>
+    ${m.series.some(s=>!S.devHidden[s.id]) ? devChart(m) : '<p class="note">All players are hidden. Tap a name to show its line.</p>'}
+    <p class="note">${m.metric==='avg'?'Points per three darts, from the darts each player really threw. ':'Share of a player\'s turns that ended on a 26, clean or by subtraction; traded 26s don\'t count. '}${S.devBy==='day'?'Each point is one lunch day, all its games together.':'Each point is one game.'} Tap or hover the chart for the values; tap a name to hide or show its line.</p>
+    ${tbl}
+  </section>`;
+}
+
 function statsHTML(){
   const games=statsGames(), lv=level();
   const rows={};
@@ -1282,6 +1410,7 @@ function statsHTML(){
         <td>${r.best||'–'}</td><td>${r.bestOut||'–'}</td><td>${r.c26}</td><td>${r.sat}</td><td>${r.busts}</td><td>${r.skips}</td><td>${r.rolls}</td><td>${r.banked} / ${r.trades}</td></tr>`).join('')}</tbody>
     </table></div>
     <p class="note">Checkout % counts every dart thrown while a one-dart finish was on (40 or less and even, or 50). Busts count as 0 for the average; skipped turns don't count. 26s include 26 by subtraction. Stats always use the darts you really threw, also when you took a random result.</p>
+    ${devPanel(games, list.map(r=>r.id))}
     ${playerPanel(games, list.map(r=>r.id))}`
     :`<section class="panel"><p class="note">${finished().length?'No finished games in this period. Pick a longer one.':'Stats appear after your first finished game.'}</p></section>`}
     <section class="panel">
@@ -1673,6 +1802,9 @@ const A={
   bull(){ if(S.mod!=='T') addDart(S.mod==='D'?'D25':'S25'); },
   miss(){ addDart('M'); },
   dart(code){ addDart(code); },
+  devMetric(v){ S.devMetric=v; render(); },
+  devBy(v){ S.devBy=v; render(); },
+  devToggle(id){ S.devHidden={...S.devHidden, [id]:!S.devHidden[id]}; render(); },
   giveFrom(id){ S.giveFrom = S.giveFrom===id ? null : id; render(); },
   give(v){ const [a,b]=v.split(':'); S.giveFrom=null; bankEvent({ev:'give', p:a, to:b}); },
   deposit(id){ bankEvent({ev:'deposit', p:id}, true); },
@@ -1756,6 +1888,9 @@ document.addEventListener('click',e=>{
   const f=A[b.dataset.act]; if(f) f(b.dataset.v);
 });
 document.addEventListener('input',e=>{ if(e.target.id==='newName') S.newName=e.target.value; });
+document.addEventListener('pointermove',e=>{ if(e.target.closest && e.target.closest('.devchart')) devTipAt(e.clientX); else devTipHide(); });
+document.addEventListener('pointerdown',e=>{ if(e.target.closest && e.target.closest('.devchart')) devTipAt(e.clientX); });
+let resizeT; window.addEventListener('resize',()=>{ clearTimeout(resizeT); resizeT=setTimeout(()=>{ if(S.view==='stats') render(); },200); });
 document.addEventListener('change',e=>{
   if(e.target.id==='importFile'){ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
     const rd=new FileReader(); rd.onload=()=>{ try{ prepareImport(JSON.parse(rd.result)); }catch(err){ toast("That file isn't a Timmy Darts backup."); } }; rd.readAsText(f); return; }
